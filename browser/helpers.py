@@ -48,7 +48,8 @@ class Archive:
         handle_extract(p, path)
         handle_close(p)
         return True
-        
+
+    
 def is_valid_file(f):
     if f.size >= settings.MAX_UPLOAD_SIZE :
         return False
@@ -78,11 +79,12 @@ def extract_archive(archive_name, project_name, extension):
     archive.extract(path)
 
     unlink(archive_name)
+
     return path
 
 
 def handle_uploaded_file(file_o, project_name, extension):
-    fd, fname = mkstemp()
+    fd, fname = mkstemp(prefix="codebro_tmp")
 
     with fdopen(fd, 'w') as f:
         for chunk in file_o.chunks():

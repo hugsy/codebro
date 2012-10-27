@@ -18,6 +18,9 @@
   function dajax_init(tag, func, pid){
   disable(tag);
   func(dajax_callback, {'project_id': pid});
+
+  setTimeout(function(){bootbox.alert('Pretty long, isnt it ? And still not finished ... ');}, 10000);
+  setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
   }
   
   function dajax_callback(data) {
@@ -29,6 +32,7 @@
    setTimeout(function(){location.reload();},3000);
   }
   }
+
 
 </script>
 

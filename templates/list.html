@@ -35,6 +35,8 @@
 	  <th>Description</th>
 	  <th>Language</th>
 	  <th>Added date</th>
+	  <th>Parsed ?</th>	  
+	  <th>XRef-ed ?</th>
 	  <th>Link</th>
 	</tr>
       </thead>
@@ -47,6 +49,23 @@
 	<td>{{ project.description }}</td>
 	<td>{{ project.language }}</td>
 	<td>{{ project.added_date }}</td>
+
+	<td>
+	{% if project.function_definition_number > 0 %}
+	<i class="icon-thumbs-up">
+	{% else %}
+	<i class="icon-thumbs-down">
+	{% endif %}
+	</td>
+
+	<td>
+	{% if project.xref_number > 0 %}
+	<i class="icon-thumbs-up">
+	{% else %}
+	<i class="icon-thumbs-down">
+	{% endif %}
+	</td>
+
 	<td>	  
 	  <a href="{%url browser.views.project_detail project.id %}">Explore
 	  <i class="icon-forward"></i>

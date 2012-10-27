@@ -28,7 +28,7 @@ from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 
-from pydot import Dot, Node, Edge, Subgraph, InvocationException
+from pydot import Dot, Node, Edge, InvocationException
 
 def index(request):
     """
@@ -292,29 +292,25 @@ def project_draw(request, project_id):
         messages.error(request, "Project must be xref-ed first")
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
     
-    graph = Dot(graph_type='digraph')
-
-    # try :
-        # caller_f = Function.objects.get(name=request.GET['function'], project=project)
-        
-    # except Function.DoesNotExist:
-        # messages.error(request, "Function '%s' does not exist in '%s'" % (request.GET['function'], project.name))
-        # return redirect( reverse("browser.views.project_detail", args=(project.id,)))
-
-    # except Function.MultipleObjectsReturned:
-        # messages.error(request, "Too many functions match '%s'. Specify file" % (request.GET['function']))
-        # return redirect( reverse("browser.views.project_detail", args=(project.id,)))
-
     for obj in serializers.deserialize("xml", request.POST['file']):
-        caller_f = obj
-        caller_f.save()
+        data = obj
+        data.save()
         break
+    caller_f = data.object
 
-    link_node(graph, project, caller_f.object)
+    xref_from = True
+    if 'xref' in request.POST and request.POST['xref'] in ('0', '1'):
+        xref_from = True if request.POST['xref']=='0' else False
+    
+    graph = Dot(graph_type='digraph',
+                graph_name='Callgraph: %s:%s' % (project.name, caller_f.name),
+                suppress_disconnected=False, simplify=False,)
+
+    link_node(graph, project, caller_f, xref_from)
 
     try :
-        response = HttpResponse(mimetype="image/png")
-        response.write(graph.create_png())
+        response = HttpResponse(mimetype="image/svg+xml")
+        response.write(graph.create_svg())
         return response
     
     except InvocationException, ie:
@@ -322,26 +318,45 @@ def project_draw(request, project_id):
         return HttpResponse("Falafail")
 
     
-def link_node(graph, project, caller_f):
+def link_node(graph, project, caller_f, xref_from):
     """
     
     """
     caller_n = Node(caller_f.name)
     graph.add_node(caller_n)
-    
-    xrefs = project.xref_set.filter(project=project, calling_function=caller_f)
 
+    if xref_from:
+        xrefs = project.xref_set.filter(project=project, calling_function=caller_f)
+    else:
+        xrefs = project.xref_set.filter(project=project, called_function=caller_f)
+        
     for xref in xrefs :
-        called_function = xref.called_function
-        callee_n = Node(called_function.name)
-        graph.add_node(callee_n)
-    
-        edge = Edge(caller_n, callee_n,
-                    label = "%s+%d" % (xref.calling_function.file.name.replace(project.get_code_path()+'/', ''),
-                                       xref.called_function_line))
-        graph.add_edge(edge)
+        if xref_from:
+            called_function = xref.called_function
+            callee_n = Node(called_function.name)
+            sub_xrefs = project.xref_set.filter(project=project, calling_function=called_function)
+        else:
+            called_function = xref.calling_function
+            callee_n = Node(called_function.name)
+            sub_xrefs = project.xref_set.filter(project=project, called_function=called_function)
 
-        sub_xrefs = project.xref_set.filter(project=project, calling_function=called_function)
         if sub_xrefs.count():
+            url_to_decl = reverse('browser.views.project_detail', args=(p.id, ))
+            url_to_decl+= "?file=%s" % called_function.file.name
+            url_to_decl+= "#line-%d" % called_function.line
+            callee_n.set_URL(url_to_decl)
+            
             link_node(graph, project, xref.called_function)
             
+        graph.add_node(callee_n)
+        if xref_from :
+            edge = Edge(caller_n, callee_n)
+        else:
+            edge = Edge(callee_n, caller_n)
+            
+        edge.set_label("%s+%d" % (xref.calling_function.file.name.replace(project.get_code_path()+'/', ''),
+                                  xref.called_function_line))
+        edge.set_fontsize(8)
+        
+        graph.add_edge(edge)
+        

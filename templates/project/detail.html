@@ -65,12 +65,17 @@
 		}
 	      </script>
 	      
-	      <form method="POST" action="{% url browser.views.project_draw project.id%}">
+	      <form method="POST" action="{% url browser.views.project_draw project.id%}" target="_blank">
 		{% csrf_token %}
 	      <div class="control-group">
-	 	<label class="control-label" for="inputIcon">Draw callgraph from:</label>
+	 	<label class="control-label" for="inputIcon">Draw callgraph:</label>
 		<div class="controls">
 		  <div class="input-prepend">
+		    <select name="xref">
+		      <option value="0">XRef From</option>
+		      <option value="1">XRef To</option>
+		    </select>
+
 		    <span class="add-on"><i class="icon-search"></i></span>
 		    <input class="span2" id="inputIcon" type="text"
 			   name="function"
@@ -83,6 +88,8 @@
 		    <select id="function_files" name="file" onchange="" size="1">
 		      <option value="">---Start type a function main---</option>
 		    </select>
+
+
 		    <input type="submit" class="btn" value="Draw Callgraph">
 		    
 		  </div>

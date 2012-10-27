@@ -79,7 +79,6 @@ def extract_archive(archive_name, project_name, extension):
     archive.extract(path)
 
     unlink(archive_name)
-
     return path
 
 

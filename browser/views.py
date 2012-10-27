@@ -7,8 +7,8 @@ from browser.models import Xref
 
 from browser.forms import ProjectForm
 from browser.helpers import valid_method_or_404
-from browser.helpers import handle_uploaded_file
-from browser.helpers import is_valid_file
+from browser.helpers import handle_uploaded_file, is_valid_file
+from browser.helpers import clang_parse_project, is_project_parsed, is_project_xrefed
 
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -172,125 +172,47 @@ def project_add(request, form):
         
     messages.success(request, "Successfully added")
     return redirect(reverse('browser.views.project_detail', args=(p.id, )))
+   
+    
+def delete_all_references_to_project(project):
+    for function in project.function_set.iterator():
+        function.delete()
 
-
-def is_project_parsed(project):
-    return project.function_definition_number != 0 \
-        and project.file_number != 0
-
-def is_project_xrefed(project):
-    return is_project_parsed(project) \
-        and project.xref_number != 0
-
+        
 def project_parse(request, project_id):
     """
     
     """
     valid_method_or_404(request, ['GET',])
     
-    p = get_object_or_404(Project, pk=project_id)
+    project = get_object_or_404(Project, pk=project_id)
 
-    if is_project_parsed(p):
-        messages.error(request, "Project '%s' already parsed"%p.name)
-        return redirect(reverse('browser.views.project_detail', args=(p.id, )))
+    if is_project_parsed(project):
+        messages.error(request, "Project '%s' already parsed"%project.name)
+        return redirect(reverse('browser.views.project_detail', args=(project.id, )))
 
-    
-    cparser = ClangParser(p.get_code_path())
-    
-    for cur_file in cparser.enumerate_files(p.language.extension) :
-        f = File()
-        f.name = cur_file
-        f.project = p
-        f.save()
-
-        p.file_number += 1
-        
-        for cur_func in cparser.get_declared_functions_in_file(cur_file):
-
-            func, created = Function.objects.get_or_create(name = cur_func[0],
-                                                           file = f,
-                                                           project = p)
-
-            # update issue 
-            if not created:
-                if cur_func[3] != func.line :
-                    messages.warning(request,
-                                     "Function '%s' in '%s' is declared twice (l.%d, and l.%d)" %
-                                     (func.name, func.file.name, func.line, cur_func[2]) )
-
-
-            func.line  = cur_func[2]                    
-            func.rtype = cur_func[3]
-
-            
-            func.save()
-
-            args = cur_func[4]
-            
-            if created:
-                p.function_definition_number += 1
-            
-                for cur_arg_name, cur_arg_type in args:
-                    arg = Argument()
-                    arg.name, arg.type = (cur_arg_name, cur_arg_type)
-                    arg.function = func
-                    arg.save()
-
-    p.is_parsed = True                
-
-    p.save()
-    messages.info(request, "Successfully parsed")  
-    return redirect(reverse('browser.views.project_detail', args=(p.id, )))
-    
-    
-    
-def delete_all_references_to_project(project):
-    for function in project.function_set.iterator():
-        function.delete()
-
-    
+    clang_parse_project(request, project)
+    return redirect(reverse('browser.views.project_detail', args=(project.id, )))
+      
 
 def project_xref(request, project_id):
     """
     
     """
     
-    p = get_object_or_404(Project, pk=project_id)
+    project = get_object_or_404(Project, pk=project_id)
 
-    if not is_project_parsed(p):
-        messages.error(request, "Project '%s' must be parsed first"%p.name)
-        return redirect(reverse('browser.views.project_detail', args=(p.id, )))
+    if not is_project_parsed(project):
+        messages.error(request, "Project '%s' must be parsed first"%project.name)
+        return redirect(reverse('browser.views.project_detail', args=(project.id, )))
 
-    if is_project_xrefed(p):
-        messages.error(request, "Project '%s' already xref-ed"%p.name)
-        return redirect(reverse('browser.views.project_detail', args=(p.id, )))
+    if is_project_xrefed(project):
+        messages.error(request, "Project '%s' already xref-ed"%project.name)
+        return redirect(reverse('browser.views.project_detail', args=(project.id, )))
       
-
-    cparser = ClangParser()
-    xref_num = 0
-    
-    for f in p.file_set.all():
-        for (caller, infos) in cparser.get_xref_calls(f.name):
-            caller, created = Function.objects.get_or_create(name=caller, file=f, project=p)
-            callee, created = Function.objects.get_or_create(name=infos['name'], file=f, project=p)
-
-            xref = Xref()
-            xref.project = p
-            xref.calling_function = caller
-            xref.called_function = callee
-            xref.called_function_line = infos['line']
-
-            xref.save()
-            xref_num+=1
-
-    if xref_num :
-        p.xref_number = xref_num
-        p.save()
-        messages.success(request, "Successfully xref-ed")
-    else :
-        messages.error(request, "No xref have been established")
-        
-    return redirect(reverse('browser.views.project_detail', args=(p.id, )))
+    clang_xref_project(request, project)
+            
+    return redirect(reverse('browser.views.project_detail', args=(project.id, )))
 
 
 def project_draw(request, project_id):

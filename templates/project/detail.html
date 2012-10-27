@@ -4,6 +4,35 @@
 
 {% block content %}
 
+
+<script type="text/javascript">
+  function dajax_error_callback(){
+  bootbox.alert('Oops ... Something went wrong !');
+  }
+
+  function disable(tag){
+  $('#btn_'+tag)[0].disabled = 'Disabled';
+  $('#btn_'+tag)[0].value = 'Parsing... Please Wait...';  
+  }
+  
+  function dajax_init(tag, func, pid){
+  disable(tag);
+  func(dajax_callback, {'project_id': pid});
+  }
+  
+  function dajax_callback(data) {
+  bootbox.alert(data.message);
+  if(data.status != 0) {
+   $('#btn_parse')[0].removeAttribute('disabled');
+   $('#btn_parse')[0].value = 'Retry';
+  } else {
+   setTimeout(function(){location.reload();},3000);
+  }
+  }
+
+</script>
+
+
 <div class="row">
     <div class="span12">
       <h3>{{ project.name }}</h3>
@@ -40,14 +69,20 @@
 	      
 	      <p>Parsed ?
 	      {% if project.file_number != 0  %}
-	      <i class="icon-ok"></i></p>
+		<i class="icon-ok"></i></p>
               <ul>
 		<li><em>{{ project.file_number}}</em> {{project.language.name}} files parsed </li>
 		<li><em>{{ project.function_definition_number }}</em> functions declared
 	      </ul>
 	      {% else %}
 	      <i class="icon-remove"></i></p>&nbsp;
-	      <a href="{% url browser.views.project_parse project.id %}" class="btn btn-mini btn-primary">Do it now !</a>
+
+		<input id="btn_parse"
+		       type="button"
+		       class="btn btn-mini btn-primary"
+		       onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse, {{project.id}});" --
+		       value="Do it now!">
+
 	      {% endif %}
 
 	      <br>
@@ -59,11 +94,6 @@
 		<li><em>{{ project.xref_number}}</em> Xrefs created
 	      </ul>
 
-	      <script type="text/javascript">
-		function dajax_error_callback(){
-		   bootbox.alert('Oops ... Something went wrong !')
-		}
-	      </script>
 	      
 	      <form method="POST" action="{% url browser.views.project_draw project.id%}" target="_blank">
 		{% csrf_token %}
@@ -79,6 +109,7 @@
 		    <span class="add-on"><i class="icon-search"></i></span>
 		    <input class="span2" id="inputIcon" type="text"
 			   name="function"
+			   placeholder="Start typing function name" 
 			   onkeypress="if (this.value.length >= 2) {
 				       Dajaxice.browser.update_files(Dajax.process,
 				       {'value':this.value, 'project_id':{{project.id}}},
@@ -86,7 +117,7 @@
 				       }">
 
 		    <select id="function_files" name="file" onchange="" size="1">
-		      <option value="">---Start type a function main---</option>
+		      <option value="">---Start type a function name---</option>
 		    </select>
 
 
@@ -99,7 +130,12 @@
 	      
 	      {% else %}
 	      <i class="icon-remove"></i></p>&nbsp;
-	       <a href="{% url browser.views.project_xref project.id %}" class="btn btn-mini btn-primary">Do it now !</a>
+		<input id="btn_xref"
+		       type="button"
+		       class="btn btn-mini btn-primary"
+		       onclick="dajax_init('xref', Dajaxice.browser.ajax_project_xref, {{project.id}});"
+		       value="Do it now!">
+
 	      {% endif %}
 
 	    </div>

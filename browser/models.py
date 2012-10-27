@@ -10,11 +10,13 @@ def validate_not_empty(value):
     if len(value.strip()) == 0:
         raise ValidationError(u'String must not be empty')
 
+    
 def validate_path(value):
     abspath = path.abspath(value)
     if not abspath.startswith(settings.SRC_PATH) or not path.isdir(abspath):
         raise ValidationError(u'Invalid path for source code')
 
+    
 def validate_project_name(value):
     if not value.isalnum():
         raise ValidationError(u'Project name must be alnum')
@@ -26,7 +28,6 @@ class Language(models.Model):
     
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.extension)
-
 
     
 class Project(models.Model):
@@ -44,6 +45,7 @@ class Project(models.Model):
 
     def get_code_path(self):
         return path.abspath(settings.SRC_PATH + "/" + self.name)
+
     
 class File(models.Model):
     name = models.CharField(max_length=1024, validators=[validate_not_empty])

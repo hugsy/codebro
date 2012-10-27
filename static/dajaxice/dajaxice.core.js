@@ -9,8 +9,16 @@ var Dajaxice = {
     
     browser: {
     
+    ajax_project_parse: function(callback_function, argv, custom_settings){
+        Dajaxice.call('browser.ajax_project_parse', 'POST', callback_function, argv, custom_settings);
+    },
+
     update_files: function(callback_function, argv, custom_settings){
         Dajaxice.call('browser.update_files', 'POST', callback_function, argv, custom_settings);
+    },
+
+    ajax_project_xref: function(callback_function, argv, custom_settings){
+        Dajaxice.call('browser.ajax_project_xref', 'POST', callback_function, argv, custom_settings);
     }
 
 

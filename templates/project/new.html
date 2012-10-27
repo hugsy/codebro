@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Add Project{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="span2"></div>
+  
+  <div class="span8">
+    <h1>Add a new project</h1>
+  </div>
+</div>
+
+<div class="row">
+  <div class="span2"></div>
+  
+  <div class="span8">
+    <form class="form-horizontal" action="{% url browser.views.project_new %}" method="POST">
+      {% csrf_token %}
+      {{ form.as_p }}
+	
+      <div class="control-group">
+	<div class="controls">
+	  <button type="submit" class="btn">Create project</button>
+	</div>
+      </div>
+      
+    </form>
+    
+  </div>
+</div>
+{% endblock content %}

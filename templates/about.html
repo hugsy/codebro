@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+
+{% block content %}      
+<div class="row">
+  <div class="span12">
+    <h2>What is CodeBro!?</h2>
+    <p>
+      <em>CodeBro!</em> is a Web-based code explorer using
+      <abbr title="Low Level Virtual Machine" class="initialism">LLVM</abbr> <a href="http://clang.llvm.org">clang</a>
+      to parse C/C++ languages, and cross-referencing the whole source code
+      (upstreaming and downstreaming) to enhance code lecture and easily
+      (graphically?) detect bugs. CodeBro! is 100% Open-Source, so feel free to
+      share, modify and fork it.  
+    </p>
+
+    <p>
+      <em>CodeBro!</em> is a basically wrapper of the following
+      kick-ass technologies:
+      <ul>
+	<li>clang + Python bindings, for code parsing;</li>
+	<li>Django, for the Web framework;</li>
+	<li>dajaxice, AJAX support for Django;</li>
+	<li>Pygments for code coloration;</li>
+	<li>Github Bootstrap to make Django look less ugly</li>
+      </ul>
+    </p>
+
+    <p>
+      <strong>ToDo</strong>
+      <ul>
+	<li>use <a href="http://www.dajaxproject.com/">dajax</a> to handle
+	parsing and xref-ing processes (for big projets)</li> 
+	<li>improve graph generation:
+	  <ol>
+	    <li>add recursion call limit</li>
+	    <li>generate a graph between 2 specific functions (to see if they
+	    ever meet)</li>
+	  </ol>
+	</li>
+	<li>build search engine</li>
+	<li>improve source code input vector (zip, git, svn)</li>
+      </ul>
+    </p>
+    
+  </div>
+</div>	    
+{% endblock %}

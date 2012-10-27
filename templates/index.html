@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Index{% endblock %}
+
+{% block content %}
+<div class="hero-unit">
+  <h1>Welcome to CodeBro!</h1>
+  <p>Ur bro for browsing code. Here are the last 4 added projects...</p>
+  <p><a class="btn btn-primary btn-large" href="/projects/new">Add a Project &raquo;</a></p>
+</div>
+
+<div class="row">
+{% for project in projects.all %} 
+<div class="span3">
+  <h2>{{project.name}}</h2>
+  <p>{{project.description}}</p>
+  <p><a class="btn" href="/projects/{{project.id}}">Explore &raquo;</a></p>
+</div>
+{% endfor %}
+</div>
+{% endblock %}

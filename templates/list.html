@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}List{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="span12">
+
+    {% if projects %}
+    <div class="pager">
+      <ul>
+	
+	{% if projects.has_previous %}
+	<li><a href="?page={{ projects.previous_page_number }}">Newer</a></li>
+        {% endif %}
+
+	<li>
+	  Page {{ projects.number }} of {{ projects.paginator.num_pages }}
+	</li>
+	
+	{% if projects.has_next %}
+	<li><a href="?page={{ projects.next_page_number }}">Older</a></li>
+        {% endif %}
+      </ul>
+    </div>
+
+
+    <table class="table table-striped">
+      
+      <thead>
+	<tr>
+	  <th>#</th>
+	  <th>Name</th>
+	  <th>Description</th>
+	  <th>Language</th>
+	  <th>Added date</th>
+	  <th>Link</th>
+	</tr>
+      </thead>
+
+    {% for project in projects %}
+      
+      <tr>
+	<td>{{ project.id }}</td>
+	<td>{{ project.name }}</td>
+	<td>{{ project.description }}</td>
+	<td>{{ project.language }}</td>
+	<td>{{ project.added_date }}</td>
+	<td>	  
+	  <a href="{%url browser.views.project_detail project.id %}">Explore
+	  <i class="icon-forward"></i>
+	  </a>
+	  </span>
+	</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    {% else %}
+    <br/>
+ 
+    <div class="alert alert-block">
+      <h4>Warning!</h4>
+      No project uploaded yet... Start now and
+      <center>
+	<p><a class="btn btn-primary btn-large" href="{%url browser.views.project_new %}">
+	    Add a Project&raquo;</a></p>
+      </center>
+    </div>
+{% endif %}
+
+  </div>
+</div>
+{% endblock %}

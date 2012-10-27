@@ -1,0 +1,28 @@
+[
+    {
+	"model": "browser.language",
+	"pk": "1",
+	"fields": {
+	    "name": "C",
+	    "extension": ".c"
+	}
+    },
+    
+    {
+	"model": "browser.language",
+	"pk": "2",
+	"fields": {
+	    "name": "C++",
+	    "extension": ".cpp"
+	}
+    },
+    
+    {
+	"model": "browser.language",
+	"pk": "3",
+	"fields": {
+	    "name": "Objective-C",
+	    "extension": ".m"
+	}
+    }
+]

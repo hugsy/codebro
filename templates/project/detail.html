@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Detail for {{ project.name }} {% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="span12">
+      <h3>{{ project.name }}</h3>
+
+      <div class="accordion" id="accordion2">
+
+	<!-- Description sub-block -->
+	<div class="accordion-group">
+	  <div class="accordion-heading">
+	    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#description">
+	      Description
+	    </a>
+	  </div>
+	  <div id="description" class="accordion-body collapse">
+	    <div class="accordion-inner">
+	      <p>Language : {{ project.language }}</p>
+	      <p>Added: {{ project.added_date }} </p>
+	      <p>Description: {{ project.description }}</p>
+	      <p>Source code path: <em>{{project.code_path}}</em></p>
+	    </div>
+	  </div>
+	</div>
+	<!-- End of description -->
+	
+	<!-- Analysis sub-block -->
+	<div class="accordion-group">
+	  <div class="accordion-heading">
+	    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#analysis">
+              Analysis
+	    </a>
+	  </div>
+	  <div id="analysis" class="accordion-body collapse">
+	    <div class="accordion-inner">
+	      
+	      <p>Parsed ?
+	      {% if project.file_number != 0  %}
+	      <i class="icon-ok"></i></p>
+              <ul>
+		<li><em>{{ project.file_number}}</em> {{project.language.name}} files parsed </li>
+		<li><em>{{ project.function_definition_number }}</em> functions declared
+	      </ul>
+	      {% else %}
+	      <i class="icon-remove"></i></p>&nbsp;
+	      <a href="{% url browser.views.project_parse project.id %}" class="btn btn-mini btn-primary">Do it now !</a>
+	      {% endif %}
+
+	      <br>
+	      
+	      <p>XRef-ed ?
+	      {% if project.xref_number != 0  %}
+	      <i class="icon-ok"></i></p>
+	      <ul>
+		<li><em>{{ project.xref_number}}</em> Xrefs created
+	      </ul>
+
+	      <script type="text/javascript">
+		function dajax_error_callback(){
+		   bootbox.alert('Oops ... Something went wrong !')
+		}
+	      </script>
+	      
+	      <form method="POST" action="{% url browser.views.project_draw project.id%}">
+		{% csrf_token %}
+	      <div class="control-group">
+	 	<label class="control-label" for="inputIcon">Draw callgraph from:</label>
+		<div class="controls">
+		  <div class="input-prepend">
+		    <span class="add-on"><i class="icon-search"></i></span>
+		    <input class="span2" id="inputIcon" type="text"
+			   name="function"
+			   onkeypress="if (this.value.length >= 2) {
+				       Dajaxice.browser.update_files(Dajax.process,
+				       {'value':this.value, 'project_id':{{project.id}}},
+				       {'error_callback': dajax_error_callback});
+				       }">
+
+		    <select id="function_files" name="file" onchange="" size="1">
+		      <option value="">---Start type a function main---</option>
+		    </select>
+		    <input type="submit" class="btn" value="Draw Callgraph">
+		    
+		  </div>
+		</div>
+	      </div>
+	      </form>
+	      
+	      {% else %}
+	      <i class="icon-remove"></i></p>&nbsp;
+	       <a href="{% url browser.views.project_xref project.id %}" class="btn btn-mini btn-primary">Do it now !</a>
+	      {% endif %}
+
+	    </div>
+	  </div>
+	</div>
+	<!-- End of analysis -->
+
+	<!-- Description sub-block -->
+	<div class="accordion-group">
+	  <div class="accordion-heading">
+	    <a class="accordion-toggle" data-toggle="collapse"
+	      data-parent="#accordion2" href="#explore"> 
+	      Explore 
+	    </a>
+	  </div>	  
+	  <div id="explore" class="accordion-body collapse in">
+	    <div class="accordion-inner">
+	      <div id="explorer">
+		<p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
+
+{% if is_dir %}
+<pre class="prettyprint linenums"><ol>{% for line in lines %}<li><a href="?file={{ path }}/{{ line }}">{{ line }}</a></li>{% endfor %}</ol></pre>
+{% else %}
+{% autoescape off %}		
+{% for line in lines %}{{ line }}
+{% endfor %}
+{% endautoescape %}
+{% endif %}
+
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- End of description -->
+	
+      </div>
+    </div>
+</div>
+
+{% endblock content %}

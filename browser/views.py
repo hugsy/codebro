@@ -341,21 +341,34 @@ def link_node(graph, project, caller_f, xref_from):
             sub_xrefs = project.xref_set.filter(project=project, called_function=called_function)
 
         if sub_xrefs.count():
-            url_to_decl = reverse('browser.views.project_detail', args=(p.id, ))
+            url_to_decl = reverse('browser.views.project_detail', args=(project.id, ))
             url_to_decl+= "?file=%s" % called_function.file.name
             url_to_decl+= "#line-%d" % called_function.line
             callee_n.set_URL(url_to_decl)
-            
-            link_node(graph, project, xref.called_function)
-            
+
+            if xref_from:
+                link_node(graph, project, xref.called_function, xref_from)
+            else:
+                link_node(graph, project, xref.calling_function, xref_from)
+                
         graph.add_node(callee_n)
         if xref_from :
             edge = Edge(caller_n, callee_n)
         else:
             edge = Edge(callee_n, caller_n)
-            
-        edge.set_label("%s+%d" % (xref.calling_function.file.name.replace(project.get_code_path()+'/', ''),
-                                  xref.called_function_line))
+
+        # edge label
+        lbl = xref.calling_function.file.name.replace(project.get_code_path()+'/', '')
+        lbl+= '+'
+        lbl+= str(xref.called_function_line)
+        edge.set_label(lbl)
+
+        # edge url
+        url = reverse('browser.views.project_detail', args=(project.id, ))
+        url+= "?file=%s" % xref.calling_function.file.name
+        url+= "#line-%d" % xref.called_function_line
+        edge.set_URL(url)
+        
         edge.set_fontsize(8)
         
         graph.add_edge(edge)

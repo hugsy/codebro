@@ -23,13 +23,10 @@ from django.core import serializers
 
 from codebro import settings
 from codebro.clangparse import ClangParser
+from codebro.renderer import CodeBroRenderer
 
 from os import listdir
 from os.path import abspath, isdir, islink
-
-from pygments import highlight
-from pygments.lexers import get_lexer_by_name
-from pygments.formatters import HtmlFormatter
 
 from pydot import Dot, Node, Edge, InvocationException
 
@@ -100,19 +97,12 @@ def project_detail(request, project_id):
         data = [l for l in listdir(cur_file) if not l.startswith('.')]
  
     else :
-        fd = open(cur_file, 'r')
-        lexer = get_lexer_by_name("c", stripall=True)
-        formatter = HtmlFormatter(linenos=True,
-                                  cssclass="codebro",
-                                  anchorlinenos=True,
-                                  lineanchors="line")
-        data = highlight(fd.read(), lexer, formatter).split('\n')
-        fd.close()
+        data = CodeBroRenderer(p).render(cur_file)
         
     ctx = {'project': p,
            'path': cur_file,
            'lines': data,
-           'is_dir': isdir(cur_file)
+           'is_dir': isdir(cur_file) 
            }
     
     return render(request, 'project/detail.html', ctx)
@@ -120,7 +110,7 @@ def project_detail(request, project_id):
 
 def project_new(request):
     """
-    create a new project, todo unify add/new
+    create a new project
     """
 
     valid_method_or_404(request, ['GET', 'POST'])
@@ -145,13 +135,9 @@ def project_new(request):
         messages.error(request, msg)
         return render(request, 'project/new.html', {'form': form})
 
-    elif request.method == 'GET' :
+    else : # request.method == 'GET' 
         form = ProjectForm()
         return render(request, 'project/new.html', {'form': form})
-
-    else :
-        messages.warning(request, "Invalid method")
-        return redirect(reverse('browser.views.index'))
 
     
 def project_add(request, form):

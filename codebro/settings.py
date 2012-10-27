@@ -4,6 +4,7 @@ import os
 
 APP_PATH = os.getenv("HOME") + "/code/codebro"
 SRC_PATH = APP_PATH + "/src"
+MAX_UPLOAD_SIZE = 104857600 # 100 MB
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

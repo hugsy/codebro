@@ -15,7 +15,11 @@ def validate_path(value):
     if not abspath.startswith(settings.SRC_PATH) or not path.isdir(abspath):
         raise ValidationError(u'Invalid path for source code')
 
+def validate_project_name(value):
+    if not value.isalnum():
+        raise ValidationError(u'Project name must be alnum')
     
+
 class Language(models.Model):
     name = models.CharField(max_length=64, validators=[validate_not_empty])
     extension = models.CharField(max_length=10)
@@ -26,7 +30,8 @@ class Language(models.Model):
 
     
 class Project(models.Model):
-    name = models.CharField(max_length=64, unique=True, validators=[validate_not_empty])
+    name = models.CharField(max_length=64, unique=True, validators=[validate_not_empty,
+                                                                    validate_project_name])
     description = models.TextField(max_length=255)
     language = models.ForeignKey(Language)
     added_date = models.DateTimeField()

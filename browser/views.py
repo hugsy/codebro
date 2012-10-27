@@ -6,6 +6,9 @@ from browser.models import Argument
 from browser.models import Xref
 
 from browser.forms import ProjectForm
+from browser.helpers import valid_method_or_404
+from browser.helpers import handle_uploaded_file
+from browser.helpers import is_valid_file
 
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -30,6 +33,7 @@ from pygments.formatters import HtmlFormatter
 
 from pydot import Dot, Node, Edge, InvocationException
 
+
 def index(request):
     """
     index page
@@ -42,6 +46,7 @@ def search(request):
     """
     search engine
     """
+    
     if "pattern" in request.POST:
         ctx = {'pattern': request.POST["pattern"]}
     else:
@@ -117,17 +122,28 @@ def project_new(request):
     """
     create a new project, todo unify add/new
     """
+
+    valid_method_or_404(request, ['GET', 'POST'])
+    
     if request.method == 'POST':
-        form = ProjectForm(request.POST)
+        form = ProjectForm(request.POST, request.FILES)
         
         if form.is_valid():
-            return project_add(request, form)
-        
-        else:
-            msg = "Invalid form: "
-            msg+= ','.join(["%s: %s"%(k,v[0]) for k,v in form.errors.iteritems()])
-            messages.error(request, msg)
-            return render(request, 'project/new.html', {'form': form})
+            ext = is_valid_file(request.FILES['file'])
+            if ext!=False:
+                if handle_uploaded_file(request.FILES['file'],
+                                        form.cleaned_data['name'],
+                                        ext) is not None :
+                    return project_add(request, form)
+                else :
+                    form.errors['file']= ["Error while handling uploaded file"]
+            else :
+                form.errors['file'] = ["File is not valid"]
+            
+        msg = "Invalid form: "
+        msg+= ','.join(["%s: %s"%(k,v[0]) for k,v in form.errors.iteritems()])
+        messages.error(request, msg)
+        return render(request, 'project/new.html', {'form': form})
 
     elif request.method == 'GET' :
         form = ProjectForm()
@@ -170,6 +186,8 @@ def project_parse(request, project_id):
     """
     
     """
+    valid_method_or_404(request, ['GET',])
+    
     p = get_object_or_404(Project, pk=project_id)
 
     if is_project_parsed(p):
@@ -189,7 +207,7 @@ def project_parse(request, project_id):
         
         for cur_func in cparser.get_declared_functions_in_file(cur_file):
 
-            func, created = Function.objects.get_or_create(name = cur_func[0],                                                               
+            func, created = Function.objects.get_or_create(name = cur_func[0],
                                                            file = f,
                                                            project = p)
 
@@ -220,18 +238,11 @@ def project_parse(request, project_id):
 
     p.is_parsed = True                
 
-    if request.method == "GET":
-        p.save()
-        messages.info(request, "Successfully parsed")  
-        return redirect(reverse('browser.views.project_detail', args=(p.id, )))
+    p.save()
+    messages.info(request, "Successfully parsed")  
+    return redirect(reverse('browser.views.project_detail', args=(p.id, )))
     
-    elif request.method == "POST":
-        p.save()
-        return True
     
-    else :
-        return False
-
     
 def delete_all_references_to_project(project):
     for function in project.function_set.iterator():

@@ -64,53 +64,35 @@ class ClangParser:
                 yield(func)
 
 
-    def inspect(self, cursor, caller):
+    def inspect(self, node, caller):
         """
         
         """
-        for cur in cursor.get_children():
-           
-            # get into if/switch/etc. statements
-            if cur.kind == CursorKind.IF_STMT:
-                self.inspect(cur, caller)
-            elif cur.kind == CursorKind.SWITCH_STMT :
-                self.inspect(cur, caller)
-            elif cur.kind == CursorKind.COMPOUND_STMT :
-                self.inspect(cur, caller)
-            
-            elif cur.kind == CursorKind.CALL_EXPR:
-                infos = {
-                    'name' : cur.displayname,
-                    'line' : cur.location.line
-                    }
-                
-                yield( (caller, infos) )
 
-                
+        if node.kind == CursorKind.FUNCTION_DECL:
+            caller = node.spelling
+
+        if node.kind == CursorKind.CALL_EXPR:
+            infos = {
+                'name' : node.displayname,
+                'line' : node.location.line
+                }
+            # print caller,'->',infos
+            yield( (caller, infos) )
+            
+        for n in node.get_children():
+            for i in self.inspect(n, caller) :
+                yield i
+        
+        
     def get_xref_calls(self, filename):
         """
         
         """
         self.parser = self.index.parse(filename, args=self.clang_args)
-        
-        for cursor in self.parser.cursor.get_children():
-            
-            # only interested in function declaration
-            if cursor.kind != CursorKind.FUNCTION_DECL:
-                continue
-
-            current_function_name = cursor.spelling
-            
-            # browse function (look for '{')
-            for c in cursor.get_children():
-                if c.kind == CursorKind.PARM_DECL:
-                    if c.kind != CursorKind.COMPOUND_STMT:
-                        continue
-                    
-                for res in self.inspect(c, current_function_name):
-                    yield res
-
-            # and goto next function
+        if self.parser:
+              for i in self.inspect(self.parser.cursor, "root"):
+                yield i
 
 
     def debug(self):
@@ -118,7 +100,7 @@ class ClangParser:
         
         """       
         if self.parser is None :
-            return "Parser not initialized"
+            return ["Parser not initialized",]
         
         if len(self.parser.diagnostics) :
             msg = []
@@ -130,5 +112,5 @@ class ClangParser:
 
             return msg
 
-        return "No parsing errors raised"
+        return ["No parsing errors raised",]
                           

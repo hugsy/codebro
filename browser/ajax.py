@@ -12,6 +12,7 @@ from codebro import settings
 from browser.helpers import clang_parse_project, clang_xref_project
 from browser.helpers import is_project_parsed, is_project_xrefed
 
+
 @dajaxice_register
 def update_files(request, value, project_id):
     dajax = Dajax()

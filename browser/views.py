@@ -30,6 +30,8 @@ from os.path import abspath, isdir, islink
 
 from pydot import Dot, Node, Edge, InvocationException
 
+from xml.sax import SAXParseException 
+
 
 def index(request):
     """
@@ -210,13 +212,19 @@ def project_draw(request, project_id):
     if not is_project_xrefed(project):
         messages.error(request, "Project must be xref-ed first")
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
-    
-    for obj in serializers.deserialize("xml", request.POST['file']):
-        data = obj
-        data.save()
-        break
-    caller_f = data.object
 
+    try :
+        for obj in serializers.deserialize("xml", request.POST['file']):
+            data = obj
+            data.save()
+            break
+        caller_f = data.object
+        
+    except SAXParseException:
+        messages.error(request, "Failed to get function")
+        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+
+    
     xref_from = True
     if 'xref' in request.POST and request.POST['xref'] in ('0', '1'):
         xref_from = True if request.POST['xref']=='0' else False

@@ -1,5 +1,6 @@
 from django.http import Http404
 from django.contrib import messages
+from django.db import IntegrityError
 
 from codebro import settings
 from codebro.clangparse import ClangParser
@@ -121,11 +122,12 @@ def clang_parse_project(r, p):
         p.file_number += 1
         
         for cur_func in cparser.get_declared_functions_in_file(cur_file):
-
+           
             func, created = Function.objects.get_or_create(name = cur_func[0],
                                                            file = f,
                                                            project = p)
-
+            
+            
             # update issue 
             if not created:
                 if cur_func[3] != func.line :
@@ -162,7 +164,7 @@ def clang_xref_project(r, p):
     """
     
     """
-    cparser = ClangParser()
+    cparser = ClangParser(p.get_code_path())
     xref_num = 0
     
     for f in p.file_set.all():

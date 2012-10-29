@@ -22,7 +22,6 @@ from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core import serializers
 
 from codebro import settings
-from codebro.clangparse import ClangParser
 from codebro.renderer import CodeBroRenderer
 
 from os import listdir
@@ -31,6 +30,8 @@ from os.path import abspath, isdir, islink
 from pydot import Dot, Node, Edge, InvocationException
 
 from xml.sax import SAXParseException 
+
+import re
 
 
 def index(request):
@@ -41,16 +42,52 @@ def index(request):
     return render(request, 'index.html', ctx)
 
 
+
+def grep(pat, filename):
+    """
+    shitty under-optimized grep function
+    """
+    blocks = []
+    line_num = 0
+    
+    with open(filename, 'r') as f :
+        for line in f.xreadlines():
+            match = pat.search(line)
+            if match is not None:
+                blocks.append([line_num, match.string])
+            line_num += 1
+            
+    return blocks 
+            
+
 def search(request):
     """
     search engine
     """
+
+    valid_method_or_404(request, ["POST"])
     
     if "pattern" in request.POST:
-        ctx = {'pattern': request.POST["pattern"]}
+        blocks = {}
+        pat = re.compile(request.POST["pattern"], re.IGNORECASE)
+        
+        for f in File.objects.all() :
+            ret = grep(pat, f.name)
+            if len(ret) > 0:
+                if f.project.name not in blocks:
+                    blocks[f.project] = {}
+                if f.name not in blocks[f.project]:
+                    blocks[f.project][f] = {}
+                blocks[f.project][f].update(ret) 
+            
+        ctx = {'pattern': request.POST["pattern"],
+               'num_matches' : len(blocks),
+               'blocks': blocks}
+        
     else:
         ctx = {'pattern': ""}
-    return render(request, "search_results.html", ctx)
+        
+    return render(request, "search.html", ctx)
 
 
 def list(request):
@@ -181,7 +218,7 @@ def project_parse(request, project_id):
 
     clang_parse_project(request, project)
     return redirect(reverse('browser.views.project_detail', args=(project.id, )))
-      
+
 
 def project_xref(request, project_id):
     """

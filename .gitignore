@@ -1,3 +1,4 @@
 *.pyc
 src/
 db.sqlite3
+TAGS

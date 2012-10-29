@@ -63,7 +63,7 @@ class Function(models.Model):
     rtype = models.CharField(max_length=16, null=True)
     
     def __unicode__(self):
-        return "%s:%d - <%s> %s (%s)" % (self.file, self.line, self.rtype,
+        return "%s:%d - <%s> %s (%s)" % (self.file, self.line if self.line is not None else 0, self.rtype,
                                          self.name, self.get_arguments())
     
     def get_arguments(self):
@@ -87,6 +87,6 @@ class Xref(models.Model):
     called_function_line = models.PositiveIntegerField()
     
     def __unicode__(self):
-        return "%s -> %s (%d)" % (self.calling_function.name,
-                                  self.function_called,
-                                  self.function_called_line)
+        return "%s -> %s (l.%d)" % (self.calling_function.name,
+                                    self.called_function.name,
+                                    self.called_function_line if self.called_function_line is not None else 0)

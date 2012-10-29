@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Search result for '{{ pattern }}' {% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="span12">
+    <h3> Results for '{{pattern}}' : {{ num_matches }} found</h3> 
+  </div>
+</div>
+
+{% for project, block in blocks.items %}
+<div class="hero-unit">
+  {% for file, data in block.items %}
+  <h5>{{ file.name }} in <em>{{ project.name }}</em></h5>
+  {% for line, match in data.items %}
+  <p><a href="{% url browser.views.project_detail project.id%}?file={{ file.name }}#line-{{ line }}">
+      # {{ line }} : {{ match }}
+  </a></p>
+  {% endfor %}
+  {% endfor %}
+</div>
+{% endfor%}
+
+{% endblock %}

@@ -2,7 +2,7 @@ from clang.cindex import CursorKind
 from clang.cindex import Index
 from clang.cindex import TypeKind
 
-from os import access, R_OK, walk, path
+from os import access, R_OK, walk, path, listdir
 
         
 class ClangParser:
@@ -10,16 +10,30 @@ class ClangParser:
     
     """
     
-    def __init__(self, root_dir=[], clang_args=[]):
+    def __init__(self, root_dir=".", clang_args=[]):
         """
         
         """        
         self.root_dir = root_dir
         self.index = Index.create()
         self.parser = None
-        self.clang_args = clang_args
+        self.clang_args = self.include_sub_dirs()
+        print self.clang_args
 
         
+    def include_sub_dirs(self):
+        """
+        
+        """
+        subdirs = []
+        for root, dirs, files in walk(self.root_dir, topdown=True, followlinks=False):
+            for d in dirs :
+                fullpath = fpath = path.join(root, d)
+                if path.isdir(fullpath):
+                    subdirs.append("-I" + fullpath)           
+        return subdirs
+               
+    
     def enumerate_files(self, extension):
         """
         
@@ -69,20 +83,23 @@ class ClangParser:
         
         """
 
-        if node.kind == CursorKind.FUNCTION_DECL:
-            caller = node.spelling
-
         if node.kind == CursorKind.CALL_EXPR:
             infos = {
                 'name' : node.displayname,
                 'line' : node.location.line
                 }
-            # print caller,'->',infos
+            print caller,'->',infos
             yield( (caller, infos) )
             
-        for n in node.get_children():
-            for i in self.inspect(n, caller) :
-                yield i
+        else :     
+            if node.kind == CursorKind.FUNCTION_DECL:
+                caller = node.spelling
+
+            for n in node.get_children():
+                for i in self.inspect(n, caller) :
+                    yield i
+                
+
         
         
     def get_xref_calls(self, filename):
@@ -91,11 +108,11 @@ class ClangParser:
         """
         self.parser = self.index.parse(filename, args=self.clang_args)
         if self.parser:
-              for i in self.inspect(self.parser.cursor, "root"):
-                yield i
+              for node in self.inspect(self.parser.cursor, "root"):
+                yield node
 
 
-    def debug(self):
+    def get_diagnostics(self):
         """
         
         """       

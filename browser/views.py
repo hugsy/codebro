@@ -24,8 +24,10 @@ from django.core import serializers
 from codebro import settings
 from codebro.renderer import CodeBroRenderer
 
-from os import listdir
+from os import listdir, access, R_OK
 from os.path import abspath, isdir, islink
+
+from hashlib import sha1
 
 from pydot import Dot, Node, Edge, InvocationException
 
@@ -261,31 +263,53 @@ def project_draw(request, project_id):
         messages.error(request, "Failed to get function")
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
-    
-    xref_from = True
-    if 'xref' in request.POST and request.POST['xref'] in ('0', '1'):
-        xref_from = True if request.POST['xref']=='0' else False
-    
-    graph = Dot(graph_type='digraph',
-                graph_name='Callgraph: %s:%s' % (project.name, caller_f.name),
-                suppress_disconnected=False, simplify=False,)
+    base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
+    if 'depth' in request.POST:
+        try:
+            depth = abs(int(request.POST['depth']))
+            base+= "@%d" % depth
+        except ValueError :
+            depth = None
+    else :
+        depth = None
 
-    link_node(graph, project, caller_f, xref_from)
-
-    try :
-        response = HttpResponse(mimetype="image/svg+xml")
-        response.write(graph.create_svg())
-        return response
+    pic_name = settings.CACHE_PATH + "/" + sha1(base).hexdigest() + ".svg"
     
-    except InvocationException, ie:
-        messages.error(request, "Failed to create png graph. Reason: %s" % ie)
-        return HttpResponse("Falafail")
+    if not access(pic_name, R_OK):
+        # if no file in cache, create it
+        xref_from = True
+        if 'xref' in request.POST and request.POST['xref'] in ('0', '1'):
+            xref_from = True if request.POST['xref']=='0' else False
+    
+        graph = Dot(graph_type='digraph',
+                    graph_name='Callgraph: %s:%s' % (project.name, caller_f.name),
+                    suppress_disconnected=False, simplify=False,)
+
+        link_node(graph, project, caller_f, xref_from, depth)
+
+        try :
+            graph.write_svg(pic_name )
+            
+        except InvocationException, ie:
+            messages.error(request, "Failed to create png graph. Reason: %s" % ie)
+            return HttpResponse("Falafail")
+
+    f = open(pic_name)
+    response = HttpResponse(mimetype="image/svg+xml")
+    response.write(f.read())
+    return response
 
     
-def link_node(graph, project, caller_f, xref_from):
+def link_node(graph, project, caller_f, xref_from, depth):
     """
     
     """
+    if depth is not None :
+        if depth == 0:
+            return
+        else:
+            depth -= 1
+        
     caller_n = Node(caller_f.name)
     graph.add_node(caller_n)
 
@@ -311,9 +335,9 @@ def link_node(graph, project, caller_f, xref_from):
             callee_n.set_URL(url_to_decl)
 
             if xref_from:
-                link_node(graph, project, xref.called_function, xref_from)
+                link_node(graph, project, xref.called_function, xref_from, depth)
             else:
-                link_node(graph, project, xref.calling_function, xref_from)
+                link_node(graph, project, xref.calling_function, xref_from, depth)
                 
         graph.add_node(callee_n)
         if xref_from :

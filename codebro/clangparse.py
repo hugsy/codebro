@@ -18,8 +18,6 @@ class ClangParser:
         self.index = Index.create()
         self.parser = None
         self.clang_args = self.include_sub_dirs()
-        print self.clang_args
-
         
     def include_sub_dirs(self):
         """
@@ -88,7 +86,6 @@ class ClangParser:
                 'name' : node.displayname,
                 'line' : node.location.line
                 }
-            print caller,'->',infos
             yield( (caller, infos) )
             
         else :     

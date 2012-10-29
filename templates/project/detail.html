@@ -19,7 +19,7 @@
   disable(tag);
   func(dajax_callback, {'project_id': pid});
 
-  //setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
+  setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
   }
   
   function dajax_callback(data) {
@@ -119,11 +119,16 @@
 				       {'error_callback': dajax_error_callback});
 				       }">
 
-		    <select id="function_files" name="file" onchange="" size="1">
+		    <select id="function_files" name="file" size="1">
 		      <option value="">---Start type a function name---</option>
 		    </select>
 
-		    <input name="depth" size="5" placeholder="Depth">
+		    <select name="depth">
+		      <option value="" selected="">Recursion depth</option>
+		      <option value="1">1</option>
+		      <option value="2">2</option>
+		      <option value="3">3</option>
+		    </select>
 
 		    <input type="submit" class="btn" value="Draw Callgraph">
 		    

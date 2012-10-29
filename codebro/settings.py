@@ -2,16 +2,21 @@
 
 import os
 
+########### CHANGE THOSE SETTINGS ###############
 APP_PATH = os.getenv("HOME") + "/code/codebro"
 SRC_PATH = APP_PATH + "/src"
-MAX_UPLOAD_SIZE = 104857600 # 100 MB
+MAX_UPLOAD_SIZE = 104857600 # 100 MB maximum archive size
 CACHE_PATH = APP_PATH + "/cache"
+SQLITE_DB_PATH = APP_PATH + "/db.sqlite3"
+CODEBRO_KEY = "c0d3Br0_k1ck_@$$"
+########### CHANGE THOSE SETTINGS ###############
+
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+    ('hugsy', 'hugsy@pyc.li'),
 )
 
 MANAGERS = ADMINS
@@ -19,7 +24,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': APP_PATH+'/db.sqlite3',                      # Or path to database file if using sqlite3.
+        'NAME': SQLITE_DB_PATH,                 # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -74,7 +79,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    APP_PATH+"/static_local/",
+    APP_PATH + "/static_local/",
 )
 
 # List of finder classes that know how to find static files in
@@ -87,7 +92,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '__yi%it6qc4-@01kx&amp;rdq37cjqyd34n)yb)+&amp;hd*v_hzkxbvh$'
+SECRET_KEY = CODEBRO_KEY
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -102,8 +107,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 ROOT_URLCONF = 'codebro.urls'

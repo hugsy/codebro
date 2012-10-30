@@ -15,9 +15,9 @@ urlpatterns = patterns('browser.views',
                        url(r'^projects/new$', 'project_new'),
 
                        url('^projects/(?P<project_id>\d+)/$',       'project_detail'),
-                       url('^projects/(?P<project_id>\d+)/parse$',  'project_parse'),
-                       url('^projects/(?P<project_id>\d+)/xref$',   'project_xref'),
                        url('^projects/(?P<project_id>\d+)/draw$',   'project_draw'),
 
+                       url('^cache/(?P<filename>.+)$', 'get_cache'),
+                           
                        url(dajaxice_config.dajaxice_url, include('dajaxice.urls')),
                        )

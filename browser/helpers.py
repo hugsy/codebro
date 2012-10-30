@@ -1,20 +1,15 @@
 from django.http import Http404
-from django.contrib import messages
-from django.db import IntegrityError
+from django.core.urlresolvers import reverse
 
 from codebro import settings
-from codebro.clangparse import ClangParser
-
-from browser.models import File, Function, Argument, Xref
 
 from tempfile import mkstemp
-from time import time
 from zipfile import ZipFile, is_zipfile
 from tarfile import TarFile, is_tarfile
 
-
 from os import fdopen, mkdir, unlink
 
+from pydot import Dot, Node, Edge, InvocationException
 
 
 class Archive:
@@ -107,87 +102,88 @@ def is_project_xrefed(project):
         and project.xref_number != 0
 
 
-def clang_parse_project(r, p):
+    
+def generate_graph(outfile, project, caller, xref, depth):
     """
     
     """
-    cparser = ClangParser(p.get_code_path())
-    
-    for cur_file in cparser.enumerate_files(p.language.extension) :
-        f = File()
-        f.name = cur_file
-        f.project = p
-        f.save()
 
-        p.file_number += 1
+    title = "Callgraph"
+    title+= "From" if xref==True else "To"
+    title+= ": %s:%s" % (project.name, caller.name)
+    
+    graph = Dot(graph_type="digraph", graph_name=title,
+                suppress_disconnected=False, simplify=False,)
+    
+    link_node(graph, project, caller, xref, depth)
+    
+    try :
+        graph.write_svg(outfile)
         
-        for cur_func in cparser.get_declared_functions_in_file(cur_file):
-           
-            func, created = Function.objects.get_or_create(name = cur_func[0],
-                                                           file = f,
-                                                           project = p)
-            
-            
-            # update issue 
-            if not created:
-                if cur_func[3] != func.line :
-                    messages.warning(r,
-                                     "Function '%s' in '%s' is declared twice (l.%d, and l.%d)" %
-                                     (func.name, func.file.name, func.line, cur_func[2]) )
-
-
-            func.line  = cur_func[2]                    
-            func.rtype = cur_func[3]
-
-            
-            func.save()
-
-            args = cur_func[4]
-            
-            if created:
-                p.function_definition_number += 1
-            
-                for cur_arg_name, cur_arg_type in args:
-                    arg = Argument()
-                    arg.name, arg.type = (cur_arg_name, cur_arg_type)
-                    arg.function = func
-                    arg.save()
-
-    p.is_parsed = True                
-
-    p.save()
-    messages.info(r, "Successfully parsed")  
-    return True
-
-
-def clang_xref_project(r, p):
-    """
-    
-    """
-    cparser = ClangParser(p.get_code_path())
-    xref_num = 0
-    
-    for f in p.file_set.all():
-        for (caller, infos) in cparser.get_xref_calls(f.name):
-            caller, created = Function.objects.get_or_create(name=caller, file=f, project=p)
-            callee, created = Function.objects.get_or_create(name=infos['name'], file=f, project=p)
-
-            xref = Xref()
-            xref.project = p
-            xref.calling_function = caller
-            xref.called_function = callee
-            xref.called_function_line = infos['line']
-
-            xref.save()
-            xref_num+=1
-
-    if xref_num :
-        p.xref_number = xref_num
-        p.save()
-        messages.success(r, "Successfully xref-ed")
-        return True
-    
-    else :
-        messages.error(r, "No xref have been established")
+    except InvocationException, ie:
         return False
+
+    return True
     
+        
+def link_node(graph, project, caller_f, xref_from, depth):
+    """
+    
+    """
+    if depth is not None :
+        if depth == 0:
+            return
+        else:
+            depth -= 1
+        
+    caller_n = Node(caller_f.name)
+    graph.add_node(caller_n)
+
+    if xref_from:
+        xrefs = project.xref_set.filter(project=project, calling_function=caller_f)
+    else:
+        xrefs = project.xref_set.filter(project=project, called_function=caller_f)
+        
+    for xref in xrefs :
+        if xref_from:
+            called_function = xref.called_function
+            callee_n = Node(called_function.name)
+            sub_xrefs = project.xref_set.filter(project=project, calling_function=called_function)
+        else:
+            called_function = xref.calling_function
+            callee_n = Node(called_function.name)
+            sub_xrefs = project.xref_set.filter(project=project, called_function=called_function)
+
+        if sub_xrefs.count():
+            url_to_decl = reverse('browser.views.project_detail', args=(project.id, ))
+            url_to_decl+= "?file=%s" % called_function.file.name
+            url_to_decl+= "#line-%d" % called_function.line
+            callee_n.set_URL(url_to_decl)
+
+            if xref_from:
+                link_node(graph, project, xref.called_function, xref_from, depth)
+            else:
+                link_node(graph, project, xref.calling_function, xref_from, depth)
+                
+        graph.add_node(callee_n)
+        if xref_from :
+            edge = Edge(caller_n, callee_n)
+        else:
+            edge = Edge(callee_n, caller_n)
+
+        # edge label
+        lbl = xref.calling_function.file.name.replace(project.get_code_path()+'/', '')
+        lbl+= '+'
+        lbl+= str(xref.called_function_line)
+        edge.set_label(lbl)
+
+        # edge url
+        url = reverse('browser.views.project_detail', args=(project.id, ))
+        url+= "?file=%s" % xref.calling_function.file.name
+        url+= "#line-%d" % xref.called_function_line
+        edge.set_URL(url)
+        
+        edge.set_fontsize(8)
+        
+        graph.add_edge(edge)
+        

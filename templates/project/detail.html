@@ -32,6 +32,14 @@
   }
   }
 
+  function update_graph_table(func, depth, xref) {
+  Dajaxice.browser.ajax_add_funcgraph_link(Dajax.process,
+                                           {'f': func,
+                                           'd': depth,
+                                           'x': xref,
+                                           },
+					   {'error_callback':dajax_error_callback});
+  }
 
 </script>
 
@@ -88,7 +96,7 @@
 
 	      {% endif %}
 
-	      <br>
+	      <hr>
 	      
 	      <p>XRef-ed ?
 	      {% if project.xref_number != 0  %}
@@ -98,17 +106,16 @@
 	      </ul>
 
 	      
-	      <form method="POST" action="{% url browser.views.project_draw project.id%}" target="_blank">
-		{% csrf_token %}
+
 	      <div class="control-group">
 	 	<label class="control-label" for="inputIcon">Draw callgraph:</label>
 		<div class="controls">
 		  <div class="input-prepend">
-		    <select name="xref">
+		    <select name="xref" id="function_xref">
 		      <option value="0">XRef From</option>
 		      <option value="1">XRef To</option>
 		    </select>
-
+		    
 		    <span class="add-on"><i class="icon-search"></i></span>
 		    <input class="span2" id="inputIcon" type="text"
 			   name="function"
@@ -118,24 +125,43 @@
 				       {'value':this.value, 'project_id':{{project.id}}},
 				       {'error_callback': dajax_error_callback});
 				       }">
-
-		    <select id="function_files" name="file" size="1">
+		    
+		    <select id="function_files" name="func" size="1">
 		      <option value="">---Start type a function name---</option>
 		    </select>
 
-		    <select name="depth">
+		    <select name="depth" id="function_depth">
 		      <option value="" selected="">Recursion depth</option>
 		      <option value="1">1</option>
 		      <option value="2">2</option>
 		      <option value="3">3</option>
 		    </select>
-
-		    <input type="submit" class="btn" value="Draw Callgraph">
 		    
-		  </div>
+		    <input type="submit" class="btn"
+			   value="Generate callgraph"
+			   onclick="update_graph_table($('#function_files')[0].value,
+				    $('#function_depth')[0].value,
+				    $('#function_xref')[0].value);
+				    return False;">
+		  </div>		  
 		</div>
 	      </div>
-	      </form>
+
+	      
+	      <table class="table table-striped">
+		<thead>
+		  <tr>
+		    <th width="40%">Name</th>
+		    <th width="15%">Xref From/To</th>
+		    <th width="15%">Depth</th>
+		    <th width="30%">Link</th>
+		  </tr>
+		</thead>
+	      </table>
+
+	      <table id="table-graphs" class="table table-striped">
+	      </table>
+	      
 	      
 	      {% else %}
 	      <i class="icon-remove"></i></p>&nbsp;
@@ -164,16 +190,7 @@
 	    <div class="accordion-inner">
 	      <div id="explorer">
 		<p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
-
-{% if is_dir %}
-<pre class="prettyprint linenums"><ol>{% for line in lines %}<li><a href="?file={{ path }}/{{ line }}">{{ line }}</a></li>{% endfor %}</ol></pre>
-{% else %}
-{% autoescape off %}		
-{% for line in lines %}{{ line }}
-{% endfor %}
-{% endautoescape %}
-{% endif %}
-
+{% include "project/file_browser.html"%}
 	      </div>
 	    </div>
 	  </div>

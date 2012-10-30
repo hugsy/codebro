@@ -1,0 +1,14 @@
+
+{% if is_dir %}
+<pre class="prettyprint linenums"><ol>{% for line in lines %}<li><a href="?file={{ path }}/{{ line }}">{{ line }}</a></li>{% endfor %}</ol></pre>
+{% else %}
+
+{# for files, output has been sanitized by pygments #}
+
+{% autoescape off %}
+{% for line in lines %}{{ line }}
+{% endfor %}
+{% endautoescape %}
+
+{% endif %}
+

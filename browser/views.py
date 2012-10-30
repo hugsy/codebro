@@ -6,11 +6,13 @@ from browser.models import Argument
 from browser.models import Xref
 
 from browser.forms import ProjectForm
-from browser.helpers import valid_method_or_404
-from browser.helpers import handle_uploaded_file, is_valid_file
-from browser.helpers import clang_parse_project, is_project_parsed, is_project_xrefed
 
-from django.http import HttpResponse
+from browser.helpers import valid_method_or_404
+from browser.helpers import handle_uploaded_file
+from browser.helpers import is_valid_file, is_project_parsed, is_project_xrefed
+from browser.helpers import generate_graph
+
+from django.http import HttpResponse, Http404
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
@@ -27,11 +29,9 @@ from codebro.renderer import CodeBroRenderer
 from os import listdir, access, R_OK
 from os.path import abspath, isdir, islink
 
-from hashlib import sha1
-
-from pydot import Dot, Node, Edge, InvocationException
-
 from xml.sax import SAXParseException 
+
+from hashlib import sha1
 
 import re
 
@@ -205,48 +205,13 @@ def delete_all_references_to_project(project):
     for function in project.function_set.iterator():
         function.delete()
 
-        
-def project_parse(request, project_id):
-    """
-    
-    """
-    valid_method_or_404(request, ['GET',])
-    
-    project = get_object_or_404(Project, pk=project_id)
-
-    if is_project_parsed(project):
-        messages.error(request, "Project '%s' already parsed"%project.name)
-        return redirect(reverse('browser.views.project_detail', args=(project.id, )))
-
-    clang_parse_project(request, project)
-    return redirect(reverse('browser.views.project_detail', args=(project.id, )))
-
-
-def project_xref(request, project_id):
-    """
-    
-    """
-    
-    project = get_object_or_404(Project, pk=project_id)
-
-    if not is_project_parsed(project):
-        messages.error(request, "Project '%s' must be parsed first"%project.name)
-        return redirect(reverse('browser.views.project_detail', args=(project.id, )))
-
-    if is_project_xrefed(project):
-        messages.error(request, "Project '%s' already xref-ed"%project.name)
-        return redirect(reverse('browser.views.project_detail', args=(project.id, )))
-      
-    clang_xref_project(request, project)
-            
-    return redirect(reverse('browser.views.project_detail', args=(project.id, )))
 
 
 def project_draw(request, project_id):
     """
     
     """
-    valid_method_or_404(request, ["GET", "POST"])
+    valid_method_or_404(request, ["GET",])
     
     project = get_object_or_404(Project, pk=project_id)
 
@@ -254,55 +219,36 @@ def project_draw(request, project_id):
         messages.error(request, "Project must be xref-ed first")
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
-    if request.method == "GET":
-        if "file" not in request.GET or "function" not in request.GET:
-            messages.error(request, "Missing argument")
-            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
-        callers = Function.objects.filter(project=project,
-                                           name=request.GET["function"],
-                                           file__name=request.GET["file"])
+    if "file" not in request.GET or "function" not in request.GET:
+        messages.error(request, "Missing argument")
+        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+    
+    callers = Function.objects.filter(project=project,
+                                      name=request.GET["function"],
+                                      file__name=request.GET["file"])
 
-        if callers.count() == 0:
-            messages.error(request, "No function matching criterias")
-            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+    if callers.count() == 0:
+        messages.error(request, "No function matching criterias")
+        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
             
-        elif callers.count() > 1:
-            messages.error(request, "More than one function match criterias")
-            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+    elif callers.count() > 1:
+        messages.error(request, "More than one function match criterias")
+        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
-        caller_f = callers[0]
+    caller_f = callers[0]
 
-        try :  depth = int(request.GET.get('depth', -1))
-        except ValueError:  depth = -1
+    try :  depth = int(request.GET.get('depth', -1))
+    except ValueError:  depth = -1
 
-        xref_from = request.GET.get("xref", True)
-        xref_from = False if request.GET.get('xref')=='1' else True
-        
-    else : # request.method == 'POST':
-        try :
-            for obj in serializers.deserialize("xml", request.POST.get('file')):
-                data = obj
-                data.save()
-                break
-            
-            caller_f = data.object
-            depth = int(request.POST.get('depth'))
-            
-            xref_from = request.POST.get("xref", True)
-            xref_from = False if request.POST.get('xref')=='1' else True
-            
-        except SAXParseException:
-            messages.error(request, "Failed to get function")
-            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
-
-        except ValueError :
-            depth = -1
+    xref_from = request.GET.get("xref", True)
+    xref_from = False if request.GET.get('xref')=='1' else True
 
     base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
     base+= "@%d" % depth  if depth > 0 else ""
 
-    pic_name = settings.CACHE_PATH + "/" + sha1(base).hexdigest() + ".svg"
+    basename = sha1(base).hexdigest() + ".svg"
+    pic_name = settings.CACHE_PATH + "/" + basename 
     
     if not access(pic_name, R_OK):
         # if no file in cache, create it
@@ -310,93 +256,19 @@ def project_draw(request, project_id):
             messages.error(request, "Failed to create png graph.")
             return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
-    f = open(pic_name)
-    response = HttpResponse(mimetype="image/svg+xml")
-    response.write(f.read())
-    return response
+    return redirect(reverse("browser.views.get_cache", args=(basename,)))
 
 
-def generate_graph(outfile, project, caller, xref, depth):
-    """
-    
-    """
 
-    title = "Callgraph"
-    title+= "From" if xref==True else "To"
-    title+= ": %s:%s" % (project.name, caller.name)
-    
-    graph = Dot(graph_type="digraph", graph_name=title,
-                suppress_disconnected=False, simplify=False,)
-    
-    link_node(graph, project, caller, xref, depth)
-    
-    try :
-        graph.write_svg(outfile)
+def get_cache(request, filename):
+    fullpath = settings.CACHE_PATH + '/' + filename
+    if not access(fullpath, R_OK):
+        raise Http404
+
+    with open(fullpath, 'r') as f:
+        data = f.read()
+
+    http = HttpResponse(content_type="image/svg+xml")
+    http.write(data)
         
-    except InvocationException, ie:
-        return False
-
-    return True
-    
-        
-def link_node(graph, project, caller_f, xref_from, depth):
-    """
-    
-    """
-    if depth is not None :
-        if depth == 0:
-            return
-        else:
-            depth -= 1
-        
-    caller_n = Node(caller_f.name)
-    graph.add_node(caller_n)
-
-    if xref_from:
-        xrefs = project.xref_set.filter(project=project, calling_function=caller_f)
-    else:
-        xrefs = project.xref_set.filter(project=project, called_function=caller_f)
-        
-    for xref in xrefs :
-        if xref_from:
-            called_function = xref.called_function
-            callee_n = Node(called_function.name)
-            sub_xrefs = project.xref_set.filter(project=project, calling_function=called_function)
-        else:
-            called_function = xref.calling_function
-            callee_n = Node(called_function.name)
-            sub_xrefs = project.xref_set.filter(project=project, called_function=called_function)
-
-        if sub_xrefs.count():
-            url_to_decl = reverse('browser.views.project_detail', args=(project.id, ))
-            url_to_decl+= "?file=%s" % called_function.file.name
-            url_to_decl+= "#line-%d" % called_function.line
-            callee_n.set_URL(url_to_decl)
-
-            if xref_from:
-                link_node(graph, project, xref.called_function, xref_from, depth)
-            else:
-                link_node(graph, project, xref.calling_function, xref_from, depth)
-                
-        graph.add_node(callee_n)
-        if xref_from :
-            edge = Edge(caller_n, callee_n)
-        else:
-            edge = Edge(callee_n, caller_n)
-
-        # edge label
-        lbl = xref.calling_function.file.name.replace(project.get_code_path()+'/', '')
-        lbl+= '+'
-        lbl+= str(xref.called_function_line)
-        edge.set_label(lbl)
-
-        # edge url
-        url = reverse('browser.views.project_detail', args=(project.id, ))
-        url+= "?file=%s" % xref.calling_function.file.name
-        url+= "#line-%d" % xref.called_function_line
-        edge.set_URL(url)
-        
-        edge.set_fontsize(8)
-        
-        graph.add_edge(edge)
-        
+    return http

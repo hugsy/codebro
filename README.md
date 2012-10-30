@@ -50,6 +50,6 @@ Install
 
 * You can now add your own applications to browse.
 
-* Licence & Author
+## Licence & Author
 Written by @_hugsy_ and released under GPL v.2
 

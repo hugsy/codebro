@@ -6,15 +6,29 @@ from pygments.formatters import HtmlFormatter
 from pygments.formatters.html import _escape_html_table
 
 from browser.helpers import is_project_xrefed
+from browser.models import File
+
 
 class CodeBroHtmlFormatter(HtmlFormatter):
-
+    """
+        
+    """
+    
     def __init__(self, **options):
+        """
+        
+        """
         HtmlFormatter.__init__(self, **options)
         self.project = options['codebro_project']
         self.is_xrefed = is_project_xrefed(self.project)
+        self.file = None
+        self.functions = []
+        
         
     def _wrap_lineanchors(self, inner):
+        """
+        
+        """        
         s = self.lineanchors
         i = self.linenostart - 1
         for t, line in inner:
@@ -26,8 +40,74 @@ class CodeBroHtmlFormatter(HtmlFormatter):
             else:
                 yield 0, line
 
+    # def wrap(self, source, outfile):
+        # return self._wrap_code(source, outfile)
 
+    # def _wrap_code(self, source, outfile):
+        # yield 0, '<code>'
+        # yield super(HtmlFormatter, self).wrap(source, outfile)
+        # yield 0, '</code>'
+
+    
+
+    def set_filename(self, name):
+        """
+        
+        """
+        self.file = File.objects.get(name=name, project=self.project)
+        self.functions = []
+        for f in self.file.function_set.iterator():
+            self.functions.append(f)
+
+        
+    def is_called_function(self, funcname):
+        """
+        
+        """
+        for f in self.functions:
+            if f.name == funcname :
+                return True
+            
+        return False
+    
+
+    def insert_function_ref(self, funcname, cls, xref, style, depth=1):
+        """
+        
+        """
+        url = reverse("browser.views.project_draw", args=(self.project.id,))
+        url+= "?function=%s" % funcname
+        url+= "&file=%s" % self.file.name
+        url+= "&xref=%d" % xref
+        url+= "&depth=%d" % depth
+        
+        link = '<span class="%s" ' % cls
+        link+= 'style="%s" ' % style
+        link+= 'onclick="window.location=\'%s\';" ' % url
+        link+= 'id="function" '
+        # link+= 'onmouseover=""'
+        link+= '>'
+        return link
+    
+    
+    def insert_calling_function_ref(self, funcname, cls):
+        """
+        
+        """
+        return self.insert_function_ref(funcname, cls, xref=0, style="border: 1px solid blue")
+
+
+    def insert_called_function_ref(self, funcname, cls):
+        """
+        
+        """
+        return self.insert_function_ref(funcname, cls, xref=1, style="border: 1px dotted black")
+    
+    
     def _format_lines(self, tokensource):
+        """
+        
+        """        
         nocls = self.noclasses
         lsep = self.lineseparator
         getcls = self.ttype2class.get
@@ -43,14 +123,18 @@ class CodeBroHtmlFormatter(HtmlFormatter):
                     ttype = ttype.parent
                     cclass = getcls(ttype)
                 cspan = cclass and '<span style="%s">' % c2s[cclass][0] or ''
+                
             else:
                 cls = self._get_css_class(ttype)
-                if cls=='nf' and self.is_xrefed:
-                    url = reverse("browser.views.project_draw", args=(self.project.id,))
-                    link = '<span class="'+cls+'"'
-                    link+= 'style="border: 1px solid blue" '
-                    link+= 'onclick="window.location=\''+url+'\';">'
+                
+                if cls=='nf' and self.is_xrefed and self.file is not None :
+                    link = self.insert_calling_function_ref(value, cls)
                     cspan = cls and link or ''
+                    
+                elif cls=='n' and self.is_xrefed and self.is_called_function(value):
+                    link = self.insert_called_function_ref(value, cls)
+                    cspan = cls and link or ''
+                   
                 else:
                     cspan = cls and '<span class="%s">' % cls or ''
                     
@@ -92,8 +176,14 @@ class CodeBroHtmlFormatter(HtmlFormatter):
 
 
 class CodeBroRenderer:
-
+    """
+        
+    """
+    
     def __init__(self, codebro_project):
+        """
+        
+        """
         self.lexer = get_lexer_by_name("c", stripall=True)
         self.formatter = CodeBroHtmlFormatter(linenos=True,
                                               cssclass="codebro",
@@ -102,6 +192,8 @@ class CodeBroRenderer:
                                               codebro_project=codebro_project)
 
     def render(self, filename):
+        
+        self.formatter.set_filename(filename)
         
         with open(filename, 'r') as f :
             data = highlight(f.read(), self.lexer, self.formatter)

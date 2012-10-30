@@ -246,60 +246,99 @@ def project_draw(request, project_id):
     """
     
     """
+    valid_method_or_404(request, ["GET", "POST"])
+    
     project = get_object_or_404(Project, pk=project_id)
 
     if not is_project_xrefed(project):
         messages.error(request, "Project must be xref-ed first")
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
-    try :
-        for obj in serializers.deserialize("xml", request.POST['file']):
-            data = obj
-            data.save()
-            break
-        caller_f = data.object
+    if request.method == "GET":
+        if "file" not in request.GET or "function" not in request.GET:
+            messages.error(request, "Missing argument")
+            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+
+        callers = Function.objects.filter(project=project,
+                                           name=request.GET["function"],
+                                           file__name=request.GET["file"])
+
+        if callers.count() == 0:
+            messages.error(request, "No function matching criterias")
+            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+            
+        elif callers.count() > 1:
+            messages.error(request, "More than one function match criterias")
+            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+
+        caller_f = callers[0]
+
+        try :  depth = int(request.GET.get('depth', -1))
+        except ValueError:  depth = -1
+
+        xref_from = request.GET.get("xref", True)
+        xref_from = False if request.GET.get('xref')=='1' else True
         
-    except SAXParseException:
-        messages.error(request, "Failed to get function")
-        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+    else : # request.method == 'POST':
+        try :
+            for obj in serializers.deserialize("xml", request.POST.get('file')):
+                data = obj
+                data.save()
+                break
+            
+            caller_f = data.object
+            depth = int(request.POST.get('depth'))
+            
+            xref_from = request.POST.get("xref", True)
+            xref_from = False if request.POST.get('xref')=='1' else True
+            
+        except SAXParseException:
+            messages.error(request, "Failed to get function")
+            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+
+        except ValueError :
+            depth = -1
 
     base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
-    if 'depth' in request.POST:
-        try:
-            depth = abs(int(request.POST['depth']))
-            base+= "@%d" % depth
-        except ValueError :
-            depth = None
-    else :
-        depth = None
+    base+= "@%d" % depth  if depth > 0 else ""
 
     pic_name = settings.CACHE_PATH + "/" + sha1(base).hexdigest() + ".svg"
     
     if not access(pic_name, R_OK):
         # if no file in cache, create it
-        xref_from = True
-        if 'xref' in request.POST and request.POST['xref'] in ('0', '1'):
-            xref_from = True if request.POST['xref']=='0' else False
-    
-        graph = Dot(graph_type='digraph',
-                    graph_name='Callgraph: %s:%s' % (project.name, caller_f.name),
-                    suppress_disconnected=False, simplify=False,)
-
-        link_node(graph, project, caller_f, xref_from, depth)
-
-        try :
-            graph.write_svg(pic_name )
-            
-        except InvocationException, ie:
-            messages.error(request, "Failed to create png graph. Reason: %s" % ie)
-            return HttpResponse("Falafail")
+        if generate_graph(pic_name, project, caller_f, xref_from, depth)==False :
+            messages.error(request, "Failed to create png graph.")
+            return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
     f = open(pic_name)
     response = HttpResponse(mimetype="image/svg+xml")
     response.write(f.read())
     return response
 
+
+def generate_graph(outfile, project, caller, xref, depth):
+    """
     
+    """
+
+    title = "Callgraph"
+    title+= "From" if xref==True else "To"
+    title+= ": %s:%s" % (project.name, caller.name)
+    
+    graph = Dot(graph_type="digraph", graph_name=title,
+                suppress_disconnected=False, simplify=False,)
+    
+    link_node(graph, project, caller, xref, depth)
+    
+    try :
+        graph.write_svg(outfile)
+        
+    except InvocationException, ie:
+        return False
+
+    return True
+    
+        
 def link_node(graph, project, caller_f, xref_from, depth):
     """
     

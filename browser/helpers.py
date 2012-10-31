@@ -157,7 +157,8 @@ def link_node(graph, project, caller_f, xref_from, depth):
         if sub_xrefs.count():
             url_to_decl = reverse('browser.views.project_detail', args=(project.id, ))
             url_to_decl+= "?file=%s" % called_function.file.name
-            url_to_decl+= "#line-%d" % called_function.line
+            if called_function.line is not None :
+                url_to_decl+= "#line-%d" % called_function.line
             callee_n.set_URL(url_to_decl)
 
             if xref_from:

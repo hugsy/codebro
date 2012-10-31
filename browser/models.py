@@ -57,7 +57,7 @@ class Function(models.Model):
     name = models.CharField(max_length=1024, validators=[validate_not_empty])
     project = models.ForeignKey(Project)
     file = models.ForeignKey(File, null=True)
-    line = models.PositiveIntegerField(null=True)
+    line = models.PositiveIntegerField(null=True, default=0)
     rtype = models.CharField(max_length=16, null=True)
     
     def __unicode__(self):

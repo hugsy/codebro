@@ -8,8 +8,13 @@ from browser.models import Xref
 
 from threading import Thread
 
+from codebro import settings
+
 
 def insert_functions_from_file(p, fname, cparser):
+    """
+    
+    """
     f = File()
     f.name = fname
     f.project = p
@@ -23,17 +28,20 @@ def insert_functions_from_file(p, fname, cparser):
             
         
         # update issue 
-        if not created:
+        # if not created:
             # if line != func.line :
                 # messages.warning(r,
                                  # "Function '%s' in '%s' is declared twice (l.%d, and l.%d)" %
                                  # (func.name, func.file.name, func.line, cur_func[2]) )
 
 
-            func.line  = line
-            func.rtype = rtype
+        func.line  = line
+        func.rtype = rtype
 
         func.save()
+        
+        if settings.DEBUG :
+            print func.file.name, func.name, func.line
 
         if created:
             args_o = []
@@ -79,6 +87,9 @@ def clang_xref_project(r, p):
             xref.called_function_line = infos['line']
 
             xref.save()
+
+            if settings.DEBUG :
+                print xref.calling_function.name, 'calls', xref.called_function.name, 'line', xref.called_function_line
 
     if p.xref_set.count() :
         messages.success(r, "Successfully xref-ed")

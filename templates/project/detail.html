@@ -149,10 +149,12 @@
 		    
 		    <input type="submit" class="btn"
 			   value="Generate callgraph"
-			   onclick="update_graph_table($('#function_files')[0].value,
+			   onclick="this.disabled=true; this.value='Generating...';
+				    update_graph_table($('#function_files')[0].value,
 				    $('#function_depth')[0].value,
 				    $('#function_xref')[0].value);
-				    return False;">
+				    this.disabled=false; this.value='Generate callgraph';
+				    return false;">
 		  </div>		  
 		</div>
 	      </div>

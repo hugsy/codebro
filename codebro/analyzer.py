@@ -6,52 +6,56 @@ from browser.models import Function
 from browser.models import Argument
 from browser.models import Xref
 
+from threading import Thread
 
+
+def insert_functions_from_file(p, fname, cparser):
+    f = File()
+    f.name = fname
+    f.project = p
+    f.save()
+    
+    for funcname, filename, line, rtype, args in cparser.get_declared_functions_in_file(f.name):
+        
+        func, created = Function.objects.get_or_create(name = funcname,
+                                                       file = f,
+                                                       project = p)
+            
+        
+        # update issue 
+        if not created:
+            # if line != func.line :
+                # messages.warning(r,
+                                 # "Function '%s' in '%s' is declared twice (l.%d, and l.%d)" %
+                                 # (func.name, func.file.name, func.line, cur_func[2]) )
+
+
+            func.line  = line
+            func.rtype = rtype
+
+        func.save()
+
+        if created:
+            p.function_definition_number += 1
+
+            args_o = []
+            for cur_arg_name, cur_arg_type in args:
+                arg = Argument()
+                arg.name, arg.type = (cur_arg_name, cur_arg_type)
+                arg.function = func
+
+            for arg_o in args_o: arg_o.save()
+                
+    
 def clang_parse_project(r, p):
     """
     
     """
     cparser = ClangParser(p.get_code_path())
-    
+
     for cur_file in cparser.enumerate_files(p.language.extension) :
-        f = File()
-        f.name = cur_file
-        f.project = p
-        f.save()
-
+        insert_functions_from_file(p, cur_file, cparser)
         p.file_number += 1
-        
-        for cur_func in cparser.get_declared_functions_in_file(cur_file):
-           
-            func, created = Function.objects.get_or_create(name = cur_func[0],
-                                                           file = f,
-                                                           project = p)
-            
-            
-            # update issue 
-            if not created:
-                if cur_func[3] != func.line :
-                    messages.warning(r,
-                                     "Function '%s' in '%s' is declared twice (l.%d, and l.%d)" %
-                                     (func.name, func.file.name, func.line, cur_func[2]) )
-
-
-            func.line  = cur_func[2]                    
-            func.rtype = cur_func[3]
-
-            
-            func.save()
-
-            args = cur_func[4]
-            
-            if created:
-                p.function_definition_number += 1
-            
-                for cur_arg_name, cur_arg_type in args:
-                    arg = Argument()
-                    arg.name, arg.type = (cur_arg_name, cur_arg_type)
-                    arg.function = func
-                    arg.save()
 
     p.is_parsed = True                
 

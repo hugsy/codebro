@@ -7,7 +7,11 @@
   <div class="span2"></div>
   
   <div class="span8">
+    {% if project_id < 0 %}
     <h1>Add a new project</h1>
+    {% else %}
+    <h1>Edit project #{{project_id}}</h1>
+    {% endif %}
   </div>
 </div>
 
@@ -16,7 +20,11 @@
   
   <div class="span8">
     <form class="form-horizontal"
+	  {% if project_id < 0  %}
 	  action="{% url browser.views.project_new %}"
+	  {% else %}
+	  action="{% url browser.views.project_edit project_id%}"
+	  {% endif %}
 	  method="POST"
 	  enctype="multipart/form-data">
       {% csrf_token %}
@@ -24,7 +32,7 @@
 	
       <div class="control-group">
 	<div class="controls">
-	  <button type="submit" class="btn">Create project</button>
+	  <button type="submit" class="btn">Save project</button>
 	</div>
       </div>
       

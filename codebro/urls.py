@@ -14,7 +14,9 @@ urlpatterns = patterns('browser.views',
                        url(r'^projects/list$', 'list'),                      
                        url(r'^projects/new$', 'project_new'),
 
-                       url('^projects/(?P<project_id>\d+)/$',       'project_detail'),
+                       url('^projects/(?P<project_id>\d+)/$',       'project_detail'),                       
+                       url(r'^projects/(?P<project_id>\d+)/edit$', 'project_edit'),
+                       url(r'^projects/(?P<project_id>\d+)/delete$', 'project_delete'),
                        url('^projects/(?P<project_id>\d+)/draw$',   'project_draw'),
 
                        url('^cache/(?P<filename>.+)$', 'get_cache'),

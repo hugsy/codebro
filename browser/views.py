@@ -174,11 +174,11 @@ def project_new(request):
         msg = "Invalid form: "
         msg+= ','.join(["%s: %s"%(k,v[0]) for k,v in form.errors.iteritems()])
         messages.error(request, msg)
-        return render(request, 'project/new.html', {'form': form})
+        return render(request, 'project/new.html', {'form': form, 'project_id': -1})
 
     else : # request.method == 'GET' 
         form = ProjectForm()
-        return render(request, 'project/new.html', {'form': form})
+        return render(request, 'project/new.html', {'form': form, 'project_id': -1})
 
     
 def project_add(request, form):
@@ -188,7 +188,7 @@ def project_add(request, form):
 
     p = Project()
     p.name = form.cleaned_data['name']
-    p.description = form.cleaned_data['description']        
+    p.description = form.cleaned_data['description']    
     p.language = form.cleaned_data['language']
     p.added_date = timezone.now()
     p.file_number = 0
@@ -200,10 +200,51 @@ def project_add(request, form):
     messages.success(request, "Successfully added")
     return redirect(reverse('browser.views.project_detail', args=(p.id, )))
    
+
+def project_edit(request, project_id):
+    """
+    edit a project
+    """ 
+    valid_method_or_404(request, ['GET', 'POST'])
+    project = get_object_or_404(Project, pk=project_id)
+
+    if request.method == 'POST':
+        form = ProjectForm(request.POST, instance=project)
+        form.Meta.exclude.append('file')
+        if form.is_valid():
+            p = form.save()
+            print type(p)
+            return redirect(reverse('browser.views.project_detail', args=(project.id, )))
+        else :
+            return render(request, 'project/new.html', {'form': form,'project_id': project.id})
+        
+    else : # request.method == 'GET' 
+        form = ProjectForm(instance=project)
+        form.Meta.exclude.append('file')
+        return render(request, 'project/new.html', {'form': form, 'project_id': project.id})
+
+
+def project_delete(request, project_id):
+    """
+    delete a project
+    """
+    project = get_object_or_404(Project, pk=project_id)
+    name = project.name
     
-def delete_all_references_to_project(project):
-    for function in project.function_set.iterator():
-        function.delete()
+    for xref in project.xref_set.iterator():
+        xref.delete()
+    
+    for file in project.file_set.iterator():
+        for function in file.function_set.iterator():
+            for arg in function.argument_set.iterator():
+                arg.delete()
+            function.delete()
+        file.delete()
+        
+    project.delete()
+
+    messages.success(request, "Project '%s' successfully deleted" % name)
+    return redirect(reverse("browser.views.list"))
 
 
 

@@ -4,7 +4,7 @@ from clang.cindex import TypeKind
 
 from os import access, R_OK, walk, path, listdir
 
-        
+
 class ClangParser:
     """
     
@@ -18,6 +18,7 @@ class ClangParser:
         self.index = Index.create()
         self.parser = None
         self.clang_args = self.include_sub_dirs()
+
         
     def include_sub_dirs(self):
         """
@@ -96,8 +97,6 @@ class ClangParser:
                 for i in self.inspect(n, caller) :
                     yield i
                 
-
-        
         
     def get_xref_calls(self, filename):
         """

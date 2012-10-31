@@ -19,9 +19,6 @@ from xml.sax import SAXParseException
 
 from os import access, R_OK
 
-
-
-
 from hashlib import sha1
 
 
@@ -60,8 +57,7 @@ def ajax_project_parse(request, project_id):
     
     """
     project = get_object_or_404(Project, pk=project_id)
-    ctx = {"status" : -1,
-           "message": ""}
+    ctx = {"status" : -1, "message": ""}
 
     if is_project_parsed(project):
         ctx["status"] = 1

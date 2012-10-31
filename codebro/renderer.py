@@ -24,6 +24,7 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         self.is_xrefed = is_project_xrefed(self.project)
         self.file = None
         self.functions = []
+        self.func_idx = 0
         
         
     def _wrap_lineanchors(self, inner):
@@ -57,6 +58,8 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         """
         self.file = File.objects.get(name=name, project=self.project)
         self.functions = []
+        self.func_idx = 0
+        
         for f in self.file.function_set.iterator():
             self.functions.append(f)
 
@@ -72,19 +75,20 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         return False
     
 
-    def insert_function_ref(self, funcname, cls, xref, style, depth=1):
+    def insert_function_ref(self, funcname, cls, style, depth=1):
         """
         
         """
-        fmt_str = "?function={0}&file={1}&xref={2}&depth={3}"
-        args = [ escape(x) for x in [funcname, self.file.name, xref, depth] ]
+        self.func_idx += 1
+        fmt_str = "?function={0}&file={1}&depth={2}"
+        args = [ escape(x) for x in [funcname, self.file.name, depth] ]
 
         url = reverse("browser.views.project_draw", args=(self.project.id,))
         url+= fmt_str.format( *args )
         
         link = '<span class="%s" ' % cls
         link+= 'style="%s" ' % style
-        link+= 'id="func-%s" ' % escape(funcname)
+        link+= 'id="func-%s-%d" ' % (escape(funcname), self.func_idx)
         link+= 'onclick="function_menu(this.id, \''+url+'\'); return false;" '         
         link+= '>'
         return link
@@ -94,14 +98,14 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         """
         
         """
-        return self.insert_function_ref(funcname, cls, xref=0, style="border: 1px solid blue")
+        return self.insert_function_ref(funcname, cls, style="border: 1px solid blue")
 
 
     def insert_called_function_ref(self, funcname, cls):
         """
         
         """
-        return self.insert_function_ref(funcname, cls, xref=1, style="border: 1px dotted black")
+        return self.insert_function_ref(funcname, cls, style="border: 1px dotted black")
     
     
     def _format_lines(self, tokensource):

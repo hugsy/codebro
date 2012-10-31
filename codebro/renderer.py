@@ -1,4 +1,5 @@
 from django.core.urlresolvers import reverse
+from django.utils.html import escape
 
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
@@ -75,21 +76,20 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         """
         
         """
+        fmt_str = "?function={0}&file={1}&xref={2}&depth={3}"
+        args = [ escape(x) for x in [funcname, self.file.name, xref, depth] ]
+
         url = reverse("browser.views.project_draw", args=(self.project.id,))
-        url+= "?function=%s" % funcname
-        url+= "&file=%s" % self.file.name
-        url+= "&xref=%d" % xref
-        url+= "&depth=%d" % depth
+        url+= fmt_str.format( *args )
         
         link = '<span class="%s" ' % cls
         link+= 'style="%s" ' % style
-        link+= 'onclick="window.location=\'%s\';" ' % url
-        link+= 'id="function" '
-        # link+= 'onmouseover=""'
+        link+= 'id="func-%s" ' % escape(funcname)
+        link+= 'onclick="function_menu(this.id, \''+url+'\'); return false;" '         
         link+= '>'
         return link
     
-    
+     
     def insert_calling_function_ref(self, funcname, cls):
         """
         

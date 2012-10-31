@@ -1,4 +1,37 @@
+<!-- function menu -->
 
+<script type="text/javascript">
+function generate_menu(url) {
+var menu = '<p><a href="'+url+'&xref=0">Draw graph from this function</a></p>';
+menu += '<p><a href="'+url+'&xref=1">Draw graph to this function</a></p>';
+
+return menu;
+}
+
+function function_menu(id, url) {
+  var off = $('#'+id).offset();
+  var d = $('#function_menu');
+
+  if(d[0].style.visibility == 'visible') { d[0].style.visibility = 'hidden'; return; }
+
+  d[0].style.visibility = 'visible';
+  d.offset( {top: off.top + 25, left: off.left } );
+
+  d[0].innerHTML = generate_menu(url);
+}
+</script>
+
+<div id="function_menu" 
+     style="visibility: hidden; background-color: white; width: 300px; border:
+     1px solid black;">
+  <ul>
+    <li></li>
+  </ul>
+</div>
+<!-- function menu end  -->
+
+
+<!-- file listing -->
 {% if is_dir %}
 <pre class="prettyprint linenums"><ol>{% for line in lines %}<li><a href="?file={{ path }}/{{ line }}">{{ line }}</a></li>{% endfor %}</ol></pre>
 {% else %}
@@ -12,3 +45,4 @@
 
 {% endif %}
 
+<!-- file listing end -->

@@ -5,8 +5,14 @@ What is it ?
 ------------
 
 Web based code browser, using clang AST parser to create cross-reference between
-function calls. It is *NOT* build for production use and do not make it
-reachable from public Internet or "You're gonna have a bad time" !
+function calls. For those interested, all this idea came from [Eli Bendersky's
+website](http://eli.thegreenplace.net/2011/07/03/parsing-c-in-python-with-clang/). 
+Parsing AST makes it easy to spot trivial bugs, and using callgraph
+makes it easier to focus on potential exploitability on this bug.
+
+It is *NOT* built in any way for production use and do not make it reachable
+from public Internet or "You're gonna have a bad time" ! 
+
 
 Disclaimer
 ----------
@@ -20,6 +26,7 @@ would be to split it into sub-projects;
 
 That being said, if you still wanna go further, read below. 
 
+
 Requires
 --------
 * python 2.6+
@@ -29,10 +36,11 @@ Requires
 * llvm + clang (with python bindings)
 * dajax & dajaxice
 
-  $ pip2 install python-dajax && pip2 install python-dajaxice
+    $ pip2 install python-dajax && pip2 install python-dajaxice
 
 should do it in most cases
-* a database to store data
+* a database to store data (sqlite, mysql, pgsql, etc.)
+
 
 Install
 -------
@@ -42,11 +50,11 @@ Install
 * Edit codebro/codebro/settings.py to match your own configuration;
 * Create database structure + initial data :
 
-  $ ./manage.py syndb
+    $ ./manage.py syndb
 
 * Launch the server
 
-  $ ./manage.py runserver
+    $ ./manage.py runserver
 
 * You can now add your own applications to browse.
 

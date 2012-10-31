@@ -94,12 +94,12 @@ def valid_method_or_404(request, methods):
 
 
 def is_project_parsed(project):
-    return project.function_definition_number != 0 \
-        and project.file_number != 0
+    return project.function_set.count() != 0 \
+        and project.file_set.count() != 0
 
 def is_project_xrefed(project):
     return is_project_parsed(project) \
-        and project.xref_number != 0
+        and project.xref_set.count() != 0
 
 
     

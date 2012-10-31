@@ -75,6 +75,31 @@ def ajax_project_parse(request, project_id):
 
 
 @dajaxice_register
+def ajax_project_unparse(request, project_id):
+    """
+    
+    """
+    project = get_object_or_404(Project, pk=project_id)
+    ctx = {"status" : -1, "message": ""}
+    
+    if is_project_xrefed(project):
+        ctx["status"]  = 1
+        ctx["message"] = "Project is xrefed, unset xref first."
+        
+    else:
+        for file in project.file_set.iterator():
+            for function in file.function_set.iterator():
+                for arg in function.argument_set.iterator():
+                    arg.delete()
+                function.delete()
+            file.delete()
+
+        ctx["status"]  = 0
+        ctx["message"] = "Successfully unparsed ... Reloading page"
+    return simplejson.dumps(ctx)
+
+
+@dajaxice_register
 def ajax_project_xref(request, project_id):
     """
     
@@ -102,6 +127,26 @@ def ajax_project_xref(request, project_id):
         
     return simplejson.dumps(ctx)
     
+
+@dajaxice_register
+def ajax_project_unxref(request, project_id):
+    """
+    
+    """
+    project = get_object_or_404(Project, pk=project_id)
+    ctx = {"status" : -1, "message": ""}
+    
+    if not is_project_xrefed(project):
+        ctx["status"]  = 1
+        ctx["message"] = "Cannot xrefed what has not been xrefed first."
+    else:
+        for xref in project.xref_set.iterator():
+            xref.delete()
+            
+        ctx["status"]  = 0
+        ctx["message"] = "Successfully un-xrefed... Reloading page"
+    return simplejson.dumps(ctx)
+
 
 @dajaxice_register
 def ajax_add_funcgraph_link(request, f, d, x):

@@ -10,15 +10,17 @@ class LanguageForm(ModelForm):
         model = Language
     
 class ProjectForm(ModelForm):
-    file = FileField()
     
     class Meta:
         model = Project
+        
         exclude = ("added_date",
-                   "file_number",
-                   "function_definition_number",
-                   "xref_number")
+                   "code_path",
+                   )
+        
         widgets = {
             "description": Textarea(attrs={"rows": 3}),
         }
     
+class NewProjectForm(ProjectForm):
+    file = FileField(required=False)

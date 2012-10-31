@@ -12,7 +12,7 @@
 
   function disable(tag){
   $('#btn_'+tag)[0].disabled = 'Disabled';
-  $('#btn_'+tag)[0].value = 'Parsing... Please Wait...';  
+  $('#btn_'+tag)[0].value = 'Please Wait...';  
   }
   
   function dajax_init(tag, func, pid){
@@ -63,6 +63,8 @@
 	      <p>Added: {{ project.added_date }} </p>
 	      <p>Description: {{ project.description }}</p>
 	      <p>Source code path: <em>{{project.code_path}}</em></p>
+	      <p>[<a href="{% url browser.views.project_edit project.id%}">Edit</a>]</p>
+	      <p>[<a href="{% url browser.views.project_delete project.id%}">Delete</a>]</p>
 	    </div>
 	  </div>
 	</div>
@@ -79,11 +81,16 @@
 	    <div class="accordion-inner">
 	      
 	      <p>Parsed ?
-	      {% if project.file_number != 0  %}
+	      {% if project.file_set.count > 0  %}
 		<i class="icon-ok"></i></p>
+	      <input id="btn_parse"
+		     type="button"
+		     class="btn btn-mini btn-primary"
+		     onclick="dajax_init('parse', Dajaxice.browser.ajax_project_unparse, {{project.id}});"
+		     value="Delete!">
               <ul>
-		<li><em>{{ project.file_number}}</em> {{project.language.name}} files parsed </li>
-		<li><em>{{ project.function_definition_number }}</em> functions declared
+		<li><em>{{ project.file_set.count}}</em> {{project.language.name}} files parsed </li>
+		<li><em>{{ project.function_set.count }}</em> functions declared
 	      </ul>
 	      {% else %}
 	      <i class="icon-remove"></i></p>&nbsp;
@@ -91,7 +98,7 @@
 		<input id="btn_parse"
 		       type="button"
 		       class="btn btn-mini btn-primary"
-		       onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse, {{project.id}});" --
+		       onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse, {{project.id}});" 
 		       value="Do it now!">
 
 	      {% endif %}
@@ -99,13 +106,16 @@
 	      <hr>
 	      
 	      <p>XRef-ed ?
-	      {% if project.xref_number != 0  %}
+	      {% if project.xref_set.count > 0  %}
 	      <i class="icon-ok"></i></p>
+	      <input id="btn_parse"
+		     type="button"
+		     class="btn btn-mini btn-primary"
+		     onclick="dajax_init('parse', Dajaxice.browser.ajax_project_unxref, {{project.id}});"
+		     value="Delete">
 	      <ul>
-		<li><em>{{ project.xref_number}}</em> Xrefs created
+		<li><em>{{ project.xref_set.count}}</em> Xrefs created
 	      </ul>
-
-	      
 
 	      <div class="control-group">
 	 	<label class="control-label" for="inputIcon">Draw callgraph:</label>

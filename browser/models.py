@@ -36,15 +36,13 @@ class Project(models.Model):
     description = models.TextField(max_length=255)
     language = models.ForeignKey(Language)
     added_date = models.DateTimeField()
-    file_number = models.PositiveIntegerField()
-    function_definition_number = models.PositiveIntegerField()
-    xref_number = models.PositiveIntegerField()
+    code_path = models.TextField(max_length=64)
     
     def __unicode__(self):
         return self.name    
 
     def get_code_path(self):
-        return path.abspath(settings.SRC_PATH + "/" + self.name)
+        return path.abspath(settings.SRC_PATH + "/" + self.code_path)
 
     
 class File(models.Model):

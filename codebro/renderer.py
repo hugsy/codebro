@@ -56,7 +56,15 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         """
         
         """
-        self.file = File.objects.get(name=name, project=self.project)
+        try :
+            self.file = File.objects.get(name=name, project=self.project)
+            
+        except File.DoesNotExist:
+            self.functions = []
+            self.func_idx = 0
+            self.file = None
+            return
+        
         self.functions = []
         self.func_idx = 0
         

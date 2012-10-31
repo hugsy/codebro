@@ -51,7 +51,7 @@
 	<td>{{ project.added_date }}</td>
 
 	<td>
-	{% if project.function_definition_number > 0 %}
+	{% if project.function_set.count > 0 %}
 	<i class="icon-thumbs-up">
 	{% else %}
 	<i class="icon-thumbs-down">
@@ -59,7 +59,7 @@
 	</td>
 
 	<td>
-	{% if project.xref_number > 0 %}
+	{% if project.xref_set.count > 0 %}
 	<i class="icon-thumbs-up">
 	{% else %}
 	<i class="icon-thumbs-down">

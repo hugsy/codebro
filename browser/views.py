@@ -5,7 +5,7 @@ from browser.models import Function
 from browser.models import Argument
 from browser.models import Xref
 
-from browser.forms import ProjectForm
+from browser.forms import NewProjectForm, ProjectForm
 
 from browser.helpers import valid_method_or_404
 from browser.helpers import handle_uploaded_file
@@ -18,6 +18,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.utils.html import escape
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
@@ -26,8 +27,8 @@ from django.core import serializers
 from codebro import settings
 from codebro.renderer import CodeBroRenderer
 
-from os import listdir, access, R_OK
-from os.path import abspath, isdir, islink
+from os import listdir, access, R_OK, unlink, rmdir
+from os.path import abspath, isdir, islink, join
 
 from xml.sax import SAXParseException 
 
@@ -119,23 +120,20 @@ def project_detail(request, project_id):
     show all details for a given project
     """
     p = get_object_or_404(Project, pk=project_id)
-    setattr(p, "code_path", p.get_code_path())
     
-    if not "file" in request.GET :
-        cur_file = p.code_path
-    else:
-        cur_file = abspath(request.GET["file"])
+    cur_file = request.GET.get('file', p.get_code_path())
+    cur_file = abspath(cur_file)
         
     data = []
 
-    if not cur_file.startswith(p.code_path):
+    if not cur_file.startswith(p.get_code_path()):
         messages.error(request, "Invalid path")
 
     elif islink(cur_file):
         messages.error(request, "Cannot browse symlink")
         
     elif isdir(cur_file):
-        data = [l for l in listdir(cur_file) if not l.startswith('.')]
+        data = listdir(cur_file) 
  
     else :
         data = CodeBroRenderer(p).render(cur_file)
@@ -157,11 +155,14 @@ def project_new(request):
     valid_method_or_404(request, ['GET', 'POST'])
     
     if request.method == 'POST':
-        form = ProjectForm(request.POST, request.FILES)
+        form = NewProjectForm(request.POST, request.FILES)
         
         if form.is_valid():
-            ext = is_valid_file(request.FILES['file'])
-            if ext!=False:
+            if 'file' not in request.FILES:
+                ext = False
+            else:
+                ext = is_valid_file(request.FILES['file'])
+            if ext != False:
                 if handle_uploaded_file(request.FILES['file'],
                                         form.cleaned_data['name'],
                                         ext) is not None :
@@ -177,7 +178,7 @@ def project_new(request):
         return render(request, 'project/new.html', {'form': form, 'project_id': -1})
 
     else : # request.method == 'GET' 
-        form = ProjectForm()
+        form = NewProjectForm()
         return render(request, 'project/new.html', {'form': form, 'project_id': -1})
 
     
@@ -188,12 +189,10 @@ def project_add(request, form):
 
     p = Project()
     p.name = form.cleaned_data['name']
-    p.description = form.cleaned_data['description']    
+    p.description = form.cleaned_data['description'] 
     p.language = form.cleaned_data['language']
+    p.code_path = p.name
     p.added_date = timezone.now()
-    p.file_number = 0
-    p.function_definition_number = 0
-    p.xref_number = 0
     p.full_clean()
     p.save()
         
@@ -209,18 +208,21 @@ def project_edit(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
     if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
-        form.Meta.exclude.append('file')
-        if form.is_valid():
-            p = form.save()
-            print type(p)
-            return redirect(reverse('browser.views.project_detail', args=(project.id, )))
+        name = escape(request.POST.get('name'))
+        description = escape(request.POST.get('description'))
+
+        if not name.isalnum:
+            messages.error(request, "name must be alnum")
+        elif not description.isalnum:
+            messages.error(request, "description must be alnum")
         else :
-            return render(request, 'project/new.html', {'form': form,'project_id': project.id})
+            project.name = escape(name)
+            project.description = escape(description)
+            project.save()
+        return redirect(reverse('browser.views.project_detail', args=(project.id, )))
         
     else : # request.method == 'GET' 
         form = ProjectForm(instance=project)
-        form.Meta.exclude.append('file')
         return render(request, 'project/new.html', {'form': form, 'project_id': project.id})
 
 
@@ -228,19 +230,23 @@ def project_delete(request, project_id):
     """
     delete a project
     """
+    
+    def rm(d):
+        """ delete recursively"""
+        for p in [join(d, f) for f in listdir(d)]:
+            if isdir(p): rm(p)
+            else: unlink(p)
+        rmdir(d)
+
     project = get_object_or_404(Project, pk=project_id)
     name = project.name
-    
-    for xref in project.xref_set.iterator():
-        xref.delete()
-    
-    for file in project.file_set.iterator():
-        for function in file.function_set.iterator():
-            for arg in function.argument_set.iterator():
-                arg.delete()
-            function.delete()
-        file.delete()
-        
+    fullpath = project.get_code_path()
+
+    if is_project_xrefed(project) or is_project_parsed(project):
+        messages.error(request, "Project '%s' must be unparsed & unxrefed first" % name)
+        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+
+    rm(fullpath)
     project.delete()
 
     messages.success(request, "Project '%s' successfully deleted" % name)

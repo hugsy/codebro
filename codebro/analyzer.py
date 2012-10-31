@@ -36,8 +36,6 @@ def insert_functions_from_file(p, fname, cparser):
         func.save()
 
         if created:
-            p.function_definition_number += 1
-
             args_o = []
             for cur_arg_name, cur_arg_type in args:
                 arg = Argument()
@@ -55,7 +53,6 @@ def clang_parse_project(r, p):
 
     for cur_file in cparser.enumerate_files(p.language.extension) :
         insert_functions_from_file(p, cur_file, cparser)
-        p.file_number += 1
 
     p.is_parsed = True                
 
@@ -69,7 +66,6 @@ def clang_xref_project(r, p):
     
     """
     cparser = ClangParser(p.get_code_path())
-    xref_num = 0
     
     for f in p.file_set.all():
         for (caller, infos) in cparser.get_xref_calls(f.name):
@@ -83,11 +79,8 @@ def clang_xref_project(r, p):
             xref.called_function_line = infos['line']
 
             xref.save()
-            xref_num+=1
 
-    if xref_num :
-        p.xref_number = xref_num
-        p.save()
+    if p.xref_set.count() :
         messages.success(r, "Successfully xref-ed")
         return True
     

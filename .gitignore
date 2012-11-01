@@ -3,3 +3,4 @@ src/
 db.sqlite3
 TAGS
 cache/*
+tests

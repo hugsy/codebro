@@ -19,7 +19,7 @@
   disable(tag);
   func(dajax_callback, {'project_id': pid});
 
-  setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
+  //setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
   }
   
   function dajax_callback(data) {
@@ -108,10 +108,10 @@
 	      <p>XRef-ed ?
 	      {% if project.xref_set.count > 0  %}
 	      <i class="icon-ok"></i></p>
-	      <input id="btn_parse"
+	      <input id="btn_xref"
 		     type="button"
 		     class="btn btn-mini btn-primary"
-		     onclick="dajax_init('xref, Dajaxice.browser.ajax_project_unxref, {{project.id}});"
+		     onclick="dajax_init('xref', Dajaxice.browser.ajax_project_unxref, {{project.id}});"
 		     value="Delete">
 	      <ul>
 		<li><em>{{ project.xref_set.count}}</em> Xrefs created

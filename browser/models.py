@@ -5,6 +5,8 @@ from codebro import settings
 
 from os import path
 
+import clang.cindex
+
 
 def validate_not_empty(value):
     if len(value.strip()) == 0:
@@ -88,3 +90,34 @@ class Xref(models.Model):
         return "%s -> %s (l.%d)" % (self.calling_function.name,
                                     self.called_function.name,
                                     self.called_function_line if self.called_function_line is not None else 0)
+
+
+class Debug(models.Model):
+    DIAG_LEVELS = (
+        (clang.cindex.Diagnostic.Ignored, "IGNORED"),
+        (clang.cindex.Diagnostic.Note, "NOTE"),
+        (clang.cindex.Diagnostic.Warning, "WARNING"),
+        (clang.cindex.Diagnostic.Error, "ERROR"),
+        (clang.cindex.Diagnostic.Fatal, "FATAL"),
+        )
+
+    category = models.PositiveIntegerField(choices=DIAG_LEVELS,
+                                           default=clang.cindex.Diagnostic.Note)
+    # file = models.ForeignKey(File)
+    filepath = models.CharField(max_length=1024)
+    line = models.PositiveIntegerField()
+    error_msg = models.TextField()
+    project = models.ForeignKey(Project)
+
+    
+    def __unicode__(self):
+        return "[%d] %s:%s - %s" % (self.category, self.project.name,
+                                    self.file, self. error_msg)
+
+    
+    def level2str(self, level):
+        for i, s in DIAG_LEVELS:
+            if i == level:
+                return s
+        return ""
+        

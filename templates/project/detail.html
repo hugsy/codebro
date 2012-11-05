@@ -6,9 +6,6 @@
 
 
 <script type="text/javascript">
-  function dajax_error_callback(){
-  bootbox.alert('Oops ... Something went wrong !');
-  }
 
   function disable(tag){
   $('#btn_'+tag)[0].disabled = 'Disabled';
@@ -31,21 +28,11 @@
    setTimeout(function(){location.reload();},3000);
   }
   }
-
-  function update_graph_table(func, depth, xref) {
-  Dajaxice.browser.ajax_add_funcgraph_link(Dajax.process,
-                                           {'f': func,
-                                           'd': depth,
-                                           'x': xref,
-                                           },
-					   {'error_callback':dajax_error_callback});
-  }
-
 </script>
 
 
 <div class="row">
-    <div class="span12">
+  <div class="span12">
       <h3>{{ project.name }}</h3>
 
       <div class="accordion" id="accordion2">
@@ -82,109 +69,48 @@
 	      
 	      <p>Parsed ?
 	      {% if project.file_set.count > 0  %}
-		<i class="icon-ok"></i></p>
-	      <input id="btn_parse"
-		     type="button"
-		     class="btn btn-mini btn-primary"
-		     onclick="dajax_init('parse', Dajaxice.browser.ajax_project_unparse, {{project.id}});"
-		     value="Delete!">
-              <ul>
-		<li><em>{{ project.file_set.count}}</em> {{project.language.name}} files parsed </li>
-		<li><em>{{ project.function_set.count }}</em> functions declared
-	      </ul>
+		<i class="icon-ok"></i>
+		<input id="btn_parse"
+		       type="button"
+		       class="btn btn-mini btn-primary"
+		       onclick="dajax_init('parse', Dajaxice.browser.ajax_project_unparse, {{project.id}});"
+		       value="Delete!">
+
+		<a href="{% url browser.views.project_analysis project.id %}">Analysis module</a>
+		
 	      {% else %}
-	      <i class="icon-remove"></i></p>&nbsp;
+		<i class="icon-remove"></i>
 
 		<input id="btn_parse"
 		       type="button"
 		       class="btn btn-mini btn-primary"
 		       onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse, {{project.id}});" 
 		       value="Do it now!">
-
 	      {% endif %}
+	      </p>
 
 	      <hr>
 	      
 	      <p>XRef-ed ?
 	      {% if project.xref_set.count > 0  %}
-	      <i class="icon-ok"></i></p>
+	      <i class="icon-ok"></i>
 	      <input id="btn_xref"
 		     type="button"
 		     class="btn btn-mini btn-primary"
 		     onclick="dajax_init('xref', Dajaxice.browser.ajax_project_unxref, {{project.id}});"
 		     value="Delete">
-	      <ul>
-		<li><em>{{ project.xref_set.count}}</em> Xrefs created
-	      </ul>
-
-	      <div class="control-group">
-	 	<label class="control-label" for="inputIcon">Draw callgraph:</label>
-		<div class="controls">
-		  <div class="input-prepend">
-		    <select name="xref" id="function_xref">
-		      <option value="0">XRef From</option>
-		      <option value="1">XRef To</option>
-		    </select>
-		    
-		    <span class="add-on"><i class="icon-search"></i></span>
-		    <input class="span2" id="inputIcon" type="text"
-			   name="function"
-			   placeholder="Start typing function name" 
-			   onkeypress="if (this.value.length >= 2) {
-				       Dajaxice.browser.update_files(Dajax.process,
-				       {'value':this.value, 'project_id':{{project.id}}},
-				       {'error_callback': dajax_error_callback});
-				       }">
-		    
-		    <select id="function_files" name="func" size="1">
-		      <option value="">---Start type a function name---</option>
-		    </select>
-
-		    <select name="depth" id="function_depth">
-		      <option value="" selected="">Recursion depth</option>
-		      <option value="1">1</option>
-		      <option value="2">2</option>
-		      <option value="3">3</option>
-		    </select>
-		    
-		    <input type="submit" class="btn"
-			   value="Generate callgraph"
-			   onclick="this.disabled=true; this.value='Generating...';
-				    update_graph_table($('#function_files')[0].value,
-				    $('#function_depth')[0].value,
-				    $('#function_xref')[0].value);
-				    this.disabled=false; this.value='Generate callgraph';
-				    return false;">
-		  </div>		  
-		</div>
-	      </div>
-
-	      
-	      <table class="table table-striped">
-		<thead>
-		  <tr>
-		    <th width="40%">Name</th>
-		    <th width="15%">Xref From/To</th>
-		    <th width="15%">Depth</th>
-		    <th width="30%">Link</th>
-		  </tr>
-		</thead>
-	      </table>
-
-	      <table id="table-graphs" class="table table-striped">
-	      </table>
-	      
 	      
 	      {% else %}
-	      <i class="icon-remove"></i></p>&nbsp;
-		<input id="btn_xref"
-		       type="button"
-		       class="btn btn-mini btn-primary"
-		       onclick="dajax_init('xref', Dajaxice.browser.ajax_project_xref, {{project.id}});"
-		       value="Do it now!">
+	      <i class="icon-remove"></i>
+	      <input id="btn_xref"
+		     type="button"
+		     class="btn btn-mini btn-primary"
+		     onclick="dajax_init('xref', Dajaxice.browser.ajax_project_xref, {{project.id}});"
+		     value="Do it now!">
 
 	      {% endif %}
-
+	      </p>
+	      
 	    </div>
 	  </div>
 	</div>

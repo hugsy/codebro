@@ -5,6 +5,7 @@ from browser.models import File
 from browser.models import Function
 from browser.models import Argument
 from browser.models import Xref
+from browser.models import Debug
 
 from threading import Thread
 
@@ -91,6 +92,20 @@ def clang_xref_project(r, p):
             if settings.DEBUG :
                 print xref.calling_function.name, 'calls', xref.called_function.name, 'line', xref.called_function_line
 
+    
+    for cat, location, error_msg in cparser.get_diagnostics():
+        print cat, location, error_msg
+        print location.file.name, location.line
+        
+        dbg = Debug()
+        dbg.category = cat
+        dbg.filepath = location.file.name
+        dbg.line = location.line
+        dbg.error_msg = error_msg
+        dbg.project = p
+        dbg.save()
+        
+    
     if p.xref_set.count() :
         messages.success(r, "Successfully xref-ed")
         return True

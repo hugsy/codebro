@@ -306,8 +306,45 @@ def project_draw(request, project_id):
     return redirect(reverse("browser.views.get_cache", args=(basename,)))
 
 
+def project_functions(request, project_id):
+    """
+    
+    """
+    project = get_object_or_404(Project, pk=project_id)
+    functions = Function.objects.filter(project=project,
+                                        file__isnull=False,
+                                        line__gt = 0 ).order_by('file__name')
+    paginator = Paginator(functions, 50)
+
+    page = request.GET.get('page')
+    try:
+        functions = paginator.page(page)
+        
+    except PageNotAnInteger:
+        functions = paginator.page(1)
+        
+    except EmptyPage:
+        functions = paginator.page(paginator.num_pages)
+        
+    ctx = {'project' : project ,
+           'functions': functions}
+    
+    return render(request, 'project/functions.html', ctx)
+
+
+def project_analysis(request, project_id):
+    """
+    
+    """
+    project = get_object_or_404(Project, pk=project_id)
+    ctx = {'project' : project , }
+    return render(request, 'project/analysis.html', ctx)
+
 
 def get_cache(request, filename):
+    """
+    
+    """
     fullpath = settings.CACHE_PATH + '/' + filename
     if not access(fullpath, R_OK):
         raise Http404
@@ -319,3 +356,4 @@ def get_cache(request, filename):
     http.write(data)
         
     return http
+

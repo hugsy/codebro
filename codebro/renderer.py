@@ -81,6 +81,17 @@ class CodeBroHtmlFormatter(HtmlFormatter):
                 return True
             
         return False
+
+
+    def get_called_function(self, funcname):
+        """
+        
+        """
+        for f in self.functions:
+            if f.name == funcname :
+                return f
+            
+        return None
     
 
     def insert_function_ref(self, funcname, cls, style, depth=1):
@@ -90,14 +101,21 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         self.func_idx += 1
         fmt_str = "?function={0}&file={1}&depth={2}"
         args = [ escape(x) for x in [funcname, self.file.name, depth] ]
+        url_to_graph = reverse("browser.views.project_draw", args=(self.project.id,))
+        url_to_graph+= fmt_str.format( *args )
 
-        url = reverse("browser.views.project_draw", args=(self.project.id,))
-        url+= fmt_str.format( *args )
-        
+        url_to_definition = ""
+        f = self.get_called_function(funcname)
+        if f is not None and (f.file is not None and f.line != 0):
+            fmt_str = "?file={0}#line-{1}"
+            args = [ escape(x) for x in [f.file.name, f.line] ]
+            url_to_definition = reverse("browser.views.project_detail", args=(self.project.id,))
+            url_to_definition+= fmt_str.format( *args )
+            
         link = '<span class="%s" ' % cls
         link+= 'style="%s" ' % style
         link+= 'id="func-%s-%d" ' % (escape(funcname), self.func_idx)
-        link+= 'onclick="function_menu(this.id, \''+url+'\'); return false;" '         
+        link+= 'onclick="function_menu(this.id, [\''+url_to_graph+'\', \''+url_to_definition+'\']); return false;" '
         link+= '>'
         return link
     

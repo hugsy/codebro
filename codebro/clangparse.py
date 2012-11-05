@@ -113,17 +113,16 @@ class ClangParser:
         
         """       
         if self.parser is None :
-            return ["Parser not initialized",]
+            return []
         
         if len(self.parser.diagnostics) :
             msg = []
             for d in self.parser.diagnostics:
-                msg.append("%s(%d) in %s: %s" % (d.category_name,
-                                                 d.category_number,
-                                                 d.location,
-                                                 d.spelling))
+                msg.append((d.category_number,
+                            d.location,
+                            d.spelling))
 
             return msg
 
-        return ["No parsing errors raised",]
+        return []
                           

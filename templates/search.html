@@ -15,9 +15,8 @@
   {% for file, data in block.items %}
   <h5>{{ file.name }} in <em>{{ project.name }}</em></h5>
   {% for line, match in data.items %}
-  <p><a href="{% url browser.views.project_detail project.id%}?file={{ file.name }}#line-{{ line }}">
-      # {{ line }} : {{ match }}
-  </a></p>
+  <p><pre class="prettyprint">
+      <a href="{% url browser.views.project_detail project.id%}?file={{ file.name }}&hl={{ line }}">{{ line }} : {{ match }}</a></pre> </p>
   {% endfor %}
   {% endfor %}
 </div>

@@ -52,19 +52,21 @@ def grep(pat, filename):
     shitty under-optimized grep function
     """
     blocks = []
-    line_num = 0
-    
+
     with open(filename, 'r') as f :
+        
+        line_num = 1
         for line in f.xreadlines():
             match = pat.search(line)
             if match is not None:
                 blocks.append([line_num, match.string])
             line_num += 1
-            
-    return blocks 
+
+
+    return blocks
             
 
-def search(request):
+def search_files(request, files, project=None):
     """
     search engine
     """
@@ -75,19 +77,26 @@ def search(request):
         blocks = {}
         pat = re.compile(request.POST["pattern"], re.IGNORECASE)
         
-        for f in File.objects.all() :
+        for f in files :
             ret = grep(pat, f.name)
             if len(ret) > 0:
-                if f.project.name not in blocks:
+                if f.project not in blocks:
                     blocks[f.project] = {}
-                if f.name not in blocks[f.project]:
+                if f not in blocks[f.project]:
                     blocks[f.project][f] = {}
                 blocks[f.project][f].update(ret) 
+
+        total = 0
+        for p in blocks.keys():
+            for e in blocks[p].keys():
+                total += len(blocks[p][e])
             
         ctx = {'pattern': request.POST["pattern"],
-               'num_matches' : len(blocks),
+               'num_matches' : total,
                'blocks': blocks}
-        
+
+        if project:
+            ctx['project'] = project
     else:
         ctx = {'pattern': ""}
         
@@ -95,8 +104,12 @@ def search(request):
 
 
 def project_search(request, project_id):
-    return render(request, "search.html")
+    p = get_object_or_404(Project, pk=project_id)
+    f = File.objects.filter(project=p)
+    return search_files(request, f, p)
 
+def search(request):
+    return search_files(request, File.objects.all())
 
 def list(request):
     """

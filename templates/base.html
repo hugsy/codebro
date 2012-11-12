@@ -19,7 +19,41 @@
     
     <!-- header panel -->
     {% block header %}
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    {% endblock %}
+    <!-- end of header -->
+    
+    <!-- display messages -->
+    <div class="row" id="warnings">
+      <div class="span2"></div>
+	<div class="span8">
+	  {% if messages %}      
+	  {% for message in messages %}
+	  <div class="alert alert-{{ message.tags }}">
+	    <button type="button" class="close" data-dismiss="alert">×</button>
+	    {{ message }}
+	  </div>
+	  {% endfor %}
+	  {% endif %}    
+	</div>
+	<div class="span2"></div>
+      </div>
+
+    <!-- end of messages -->
+    
+    <!-- body  -->
+    <div class="container">
+
+      {% block content %}
+      {% endblock %}
+
+      <br/>
+      <br/>
+
+    </div>
+    <!-- end of body -->
+
+    {% block footer %}
+    <div class="navbar navbar-inverse navbar-fixed-bottom">
       <div class="navbar-inner">
         <div class="container">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -57,46 +91,7 @@
 	  
 	</div>
       </div>
-    </div>
-
+    </div>    
     {% endblock %}
-    <!-- end of header -->
-
-    <br>
-    
-    <!-- display messages -->
-      <div class="row">
-	<div class="span3">
-	</div>
-	<div class="span8">
-	  {% if messages %}      
-	  {% for message in messages %}
-	  <div class="alert alert-{{ message.tags }}">
-	    <button type="button" class="close" data-dismiss="alert">×</button>
-	    {{ message }}
-	  </div>
-	  {% endfor %}
-	  {% endif %}    
-	</div>
-      </div>
-
-    <!-- end of messages -->
-    
-    <!-- body  -->
-    <div class="container">
-
-      {% block content %}
-      {% endblock %}
-
-      <br/>
-      <br/>
-
-      <footer class="pull-right">
-	<small>Powered by CodeBro!, <em>@_hugsy_</em> </small>
-      </footer>
-
-    </div>
-    <!-- end of body -->
-    
   </body>
 </html>

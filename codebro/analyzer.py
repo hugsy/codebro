@@ -58,8 +58,8 @@ def clang_xref_project(r, p):
 
                     for arg_o in args_o: arg_o.save()
 
-                if settings.DEBUG :
-                    print func.file.name, func.name, func.line, args
+                # if settings.DEBUG :
+                    # print func.file.name, func.name, func.line, args
                     
             
             if len(out) == 2:
@@ -76,8 +76,8 @@ def clang_xref_project(r, p):
 
                 xref.save()
 
-                if settings.DEBUG :
-                    print xref.calling_function.name, 'calls', xref.called_function.name, 'line', xref.called_function_line, 'in', f.name
+                # if settings.DEBUG :
+                    # print xref.calling_function.name, 'calls', xref.called_function.name, 'line', xref.called_function_line, 'in', f.name
 
 
     

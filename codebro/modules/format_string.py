@@ -34,7 +34,9 @@ class FormatStringModule(Module):
         caller_name = node.displayname
         
         # fmt str method 1 : lookup for known functions (printf, fprintf, sprintf, etc.)
-        # todo
+        touchy_functions = [ ('printf', 1),
+                             ('fprintf', 1),
+                             ('sprintf', 1)]
 
         # fmt str method 2 : compare args in static strings at function call
         number_of_args = -1
@@ -43,36 +45,34 @@ class FormatStringModule(Module):
         unexposed_refs = list(node.get_children())
         # unexposed_refs[0] is a ref to node, args start at offset 1
 
-        for i in range(len(unexposed_refs[1:])):
+        for i in range(1, len(unexposed_refs)):
+            found = False
             arg_ref_node = unexposed_refs[i]
-            
-            if arg_ref_node.kind == CursorKind.UNEXPOSED_EXPR :
-                childs = list(arg_ref_node.get_children())
-                if len(childs) == 0:
-                    continue
-                arg_node = childs[0]
 
-            if arg_node.kind == CursorKind.UNEXPOSED_EXPR:
-                arg_node = list(arg_node.get_children())[0]
+            for subref in arg_ref_node.get_children() :
+
+                if subref.kind == CursorKind.STRING_LITERAL:
+                    line = self.solve_string(subref)
+                    if "%" in line :
+                        number_of_args = len(unexposed_refs) - i - 1
+                        found = True
+                        break
+
+            if found :
+                break
             
-            if arg_node.kind == CursorKind.STRING_LITERAL:
-                line = self.solve_string(arg_node)
-                if "%" in line :
-                    number_of_args = len(unexposed_refs) - i - 1
-                    break
-                
         if len(line) == 0  : return            # no static string literal found
         if "%" not in line : return            # no format symbol found
         if line.count("%%") == 2*line.count("%")  : return            # no static string literal found
 
-        num_singles = line.count("%") - line.count("%%")
+        num_singles = line.count("%") - 2*line.count("%%")
 
         if number_of_args < num_singles:
-            msg = "In %s Number of arguments do not match (%d declared in string, %d found in function)"
+            msg = "%s : args number mismatch (%d declared in string, %d found in function)"
             msg%= (caller_name, num_singles, number_of_args)
+            print '++++', msg
             
             m = ModuleDiagnostic()
-            # m.uid = self.uid
             m.name = self.name
             m.project = self.parser.project
             m.module = self.module
@@ -83,15 +83,12 @@ class FormatStringModule(Module):
             
                 
     def solve_string(self, node):
-        pattern = re.compile(r'[^"]*"(.*)"[^"]*')
-        res = ""
-        
+        start = node.extent.start.offset
+        end = node.extent.end.offset
+
         with open(node.location.file.name, 'r') as f:
-            data = [x[:-1] for x in f.readlines()]
-       
-        # line && col start at 1 + remove dbl quote
-        for line in data[node.extent.start.line-1:node.extent.end.line]:
-            res+= re.sub(pattern, r'\1', line)
+            data = f.read()
+            res = data[start:end].strip()
         
         return res
 

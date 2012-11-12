@@ -11,15 +11,16 @@ urlpatterns = patterns('browser.views',
                        url(r'^[/]*$', 'index'),
                        url(r'^search/$', 'search'),
                        url(r'^about[/]?$', TemplateView.as_view(template_name="about.html"), name='about',),
-                       url(r'^projects/list$', 'list'),                      
+                       url(r'^projects/list$', 'list'),
                        url(r'^projects/new$', 'project_new'),
 
-                       url(r'^projects/(?P<project_id>\d+)/?$',          'project_detail'),
+                       url(r'^projects/(?P<project_id>\d+)/?$',         'project_detail'),
                        url(r'^projects/(?P<project_id>\d+)/edit$',      'project_edit'),
                        url(r'^projects/(?P<project_id>\d+)/delete$',    'project_delete'),
                        url(r'^projects/(?P<project_id>\d+)/draw$',      'project_draw'),
                        url(r'^projects/(?P<project_id>\d+)/functions$', 'project_functions'),
                        url(r'^projects/(?P<project_id>\d+)/analysis$',  'project_analysis'),
+                       url(r'^projects/(?P<project_id>\d+)/search/$',   'project_search'),
                        
                        url(r'^cache/(?P<filename>.+)$', 'get_cache'),
                            

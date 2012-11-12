@@ -94,6 +94,10 @@ def search(request):
     return render(request, "search.html", ctx)
 
 
+def project_search(request, project_id):
+    return render(request, "search.html")
+
+
 def list(request):
     """
     enumerates all projects

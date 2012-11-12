@@ -37,11 +37,22 @@
               <li><a href="{% url about %}">About</a></li>
             </ul>
 
+	    {% if project %}
+	    <form class="navbar-form pull-right" action="{% url browser.views.project_search project.id%}" method="POST">
+	      <input type="text" name="pattern" class="input-medium search-query" placeholder="Search in {{project.name}}"/>
+              <button type="submit" class="btn">Go</button>
+	      {% csrf_token %}
+            </form>
+
+	    {% else %}
+
 	    <form class="navbar-form pull-right" action="{% url browser.views.search %}" method="POST">
 	      <input type="text" name="pattern" class="input-medium search-query" placeholder="Search"/>
               <button type="submit" class="btn">Go</button>
 	      {% csrf_token %}
             </form>
+	    {% endif %}
+	    
 	  </div>
 	  
 	</div>

@@ -158,7 +158,7 @@ def link_node(graph, project, caller_f, xref_from, depth):
             url_to_decl = reverse('browser.views.project_detail', args=(project.id, ))
             url_to_decl+= "?file=%s" % called_function.file.name
             if called_function.line is not None :
-                url_to_decl+= "#line-%d" % called_function.line
+                url_to_decl+= "&hl=%d" % called_function.line
             callee_n.set_URL(url_to_decl)
 
             if xref_from:
@@ -181,7 +181,7 @@ def link_node(graph, project, caller_f, xref_from, depth):
         # edge url
         url = reverse('browser.views.project_detail', args=(project.id, ))
         url+= "?file=%s" % xref.calling_function.file.name
-        url+= "#line-%d" % xref.called_function_line
+        url+= "&hl=%d" % xref.called_function_line
         edge.set_URL(url)
         
         edge.set_fontsize(8)

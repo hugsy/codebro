@@ -41,15 +41,6 @@ class CodeBroHtmlFormatter(HtmlFormatter):
                 
             else:
                 yield 0, line
-
-    # def wrap(self, source, outfile):
-        # return self._wrap_code(source, outfile)
-
-    # def _wrap_code(self, source, outfile):
-        # yield 0, '<code>'
-        # yield super(HtmlFormatter, self).wrap(source, outfile)
-        # yield 0, '</code>'
-
     
 
     def set_filename(self, name):
@@ -107,7 +98,7 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         url_to_definition = ""
         f = self.get_called_function(funcname)
         if f is not None and (f.file is not None and f.line != 0):
-            fmt_str = "?file={0}#line-{1}"
+            fmt_str = "?file={0}&hl={1}"
             args = [ escape(x) for x in [f.file.name, f.line] ]
             url_to_definition = reverse("browser.views.project_detail", args=(self.project.id,))
             url_to_definition+= fmt_str.format( *args )
@@ -210,7 +201,7 @@ class CodeBroRenderer:
         
     """
     
-    def __init__(self, codebro_project):
+    def __init__(self, codebro_project, highlight_lines = []):
         """
         
         """
@@ -219,7 +210,8 @@ class CodeBroRenderer:
                                               cssclass="codebro",
                                               anchorlinenos=True,
                                               lineanchors="line",
-                                              codebro_project=codebro_project)
+                                              codebro_project=codebro_project,
+                                              hl_lines=highlight_lines)
 
     def render(self, filename):
         

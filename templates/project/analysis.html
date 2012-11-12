@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Analyse module for {{ project.name }} {% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="span12">
+    <h3> Analysis module for '{{ project.name }}'</h3>
+    
+    <ul class="nav nav-tabs" id="anal">
+      <li><a href="{% url browser.views.project_detail project.id %}" >Back to Browser</a></li>
+      <li class="active">
+	<a href="#parse" data-toggle="tab">Parse</a></li>
+      <li><a href="#xref" data-toggle="tab">Xref-ing</a></li>
+      <li><a href="#debug" data-toggle="tab">Debug</a></li>
+ 
+      {% for module in project.module_set.iterator %}
+      <li><a href="#tab-{{module.id}}" data-toggle="tab">{{ module.name }}</a></li>
+      {% endfor %}
+    </ul>
+ 
+    <div class="tab-content">
+      <div class="tab-pane active" id="parse">
+	{% include "project/parse.html" %}
+      </div>
+
+      <div class="tab-pane" id="xref">
+	{% include "project/xref.html" %}
+      </div>
+
+      <div class="tab-pane" id="debug">
+	{% include "project/debug.html" %}
+      </div>
+
+      {% for module in project.module_set.iterator %}
+      <div class="tab-pane" id="tab-{{module.id}}">
+	{% include "project/module.html" with mod=module %}
+      </div>
+      {% endfor %}
+
+  </div>
+</div>
+
+{% endblock %}

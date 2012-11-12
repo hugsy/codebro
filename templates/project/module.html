@@ -1,0 +1,27 @@
+
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Diag#</th>
+      <th>File</th>
+      <th>Line</th>
+      <th>Error</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for m in mod.modulediagnostic_set.iterator %}
+    <tr>
+      <td>{{m.id}}</td>
+      <td>{{m.filepath}}</td>
+      <td>{{m.line}}</td>
+      <td>{{m.message}}</td>
+      <td>
+	<a href="{% url browser.views.project_detail project.id%}?file={{m.filepath}}&amp;hl={{m.line}}">Link</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

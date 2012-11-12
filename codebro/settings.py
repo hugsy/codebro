@@ -9,6 +9,8 @@ MAX_UPLOAD_SIZE = 104857600 # 100 MB maximum archive size
 CACHE_PATH = APP_PATH + "/cache"
 SQLITE_DB_PATH = APP_PATH + "/db.sqlite3"
 CODEBRO_KEY = "c0d3Br0_k1ck_@$$"
+CLANG_PARSE_OPTIONS = ["-I/usr/lib/gcc/x86_64-unknown-linux-gnu/4.7.2/include",
+                       "-I/usr/include/"]
 ########### CHANGE THOSE SETTINGS ###############
 
 

@@ -2,6 +2,10 @@ from clang.cindex import CursorKind
 from clang.cindex import Index
 from clang.cindex import TypeKind
 
+from codebro import settings
+from codebro.modules.format_string import FormatStringModule
+from browser.models import Debug
+
 from os import access, R_OK, walk, path, listdir
 
 
@@ -10,16 +14,46 @@ class ClangParser:
     
     """
     
-    def __init__(self, root_dir=".", clang_args=[]):
+    def __init__(self, project, clang_args=[]):
         """
         
-        """        
-        self.root_dir = root_dir
+        """
+        self.project = project
+        self.root_dir = self.project.get_code_path()
         self.index = Index.create()
         self.parser = None
-        self.clang_args = self.include_sub_dirs()
-
         
+        self.clang_args = settings.CLANG_PARSE_OPTIONS
+        self.clang_args+= self.include_sub_dirs()
+        self.clang_args+= clang_args
+        
+        self.diags = []
+        self.modules = {}
+        self.register_modules( [FormatStringModule,] )
+        
+
+    def register_modules(self, modules):
+        """
+        
+        """
+        for module in modules :
+            m = module(self)
+
+            # check for existing module id
+            already_exists = False
+            for mod in self.modules.values() :
+                if m.uid == mod.uid :
+                    print("Module Id %d already declared for module '%s', cannot add" % (mod.uid, mod.name))
+                    already_exists = True
+                    break
+
+            if not already_exists:
+                m.register()
+                
+                if settings.DEBUG :
+                    print("Added module '%s'" % m.name)
+
+            
     def include_sub_dirs(self):
         """
         
@@ -31,50 +65,22 @@ class ClangParser:
                 if path.isdir(fullpath):
                     subdirs.append("-I" + fullpath)           
         return subdirs
-               
+
     
-    def enumerate_files(self, extension):
+    @staticmethod
+    def enumerate_files(root_dir, extensions):
         """
         
         """
-        for root, dirs, files in walk(self.root_dir, topdown=True, followlinks=False):
+        for root, dirs, files in walk(root_dir, topdown=True, followlinks=False):
             for f in files :
                 fpath = path.join(root, f)
-                if not access(fpath, R_OK):        continue
-                if not fpath.endswith(extension):  continue
-                yield(fpath)
-
+                if not access(fpath, R_OK):
+                    continue
                 
-    def get_declared_functions_in_file(self, filename, ignore_include_headers=True):
-        """
-        
-        """
-        self.parser = self.index.parse(filename, args=self.clang_args)
-        
-        for cursor in self.parser.cursor.get_children():
-            
-            if not cursor.location.file:
-                continue
-
-            if ignore_include_headers and cursor.location.file.name.endswith(".h"):
-                continue
-
-
-            if cursor.kind == CursorKind.FUNCTION_DECL:
-                return_type = cursor.type.get_result()
-                args = []
-            
-                for c in cursor.get_children():
-                    if c.kind == CursorKind.PARM_DECL:
-                        args.append( (c.type.kind.spelling, c.displayname) )
-                    
-                func = [cursor.spelling,
-                        cursor.location.file.name,
-                        cursor.location.line,
-                        return_type.kind.spelling,
-                        args ]
-            
-                yield(func)
+                for ext in extensions :
+                    if fpath.endswith(ext):
+                        yield(fpath)
 
 
     def inspect(self, node, caller):
@@ -82,47 +88,62 @@ class ClangParser:
         
         """
 
-        if node.kind == CursorKind.CALL_EXPR:
+        if node.kind == CursorKind.FUNCTION_DECL :
+            caller = node.spelling
+            
+            if node.location.file and not node.location.file.name.endswith(".h") :
+                return_type = node.type.get_result()
+                args = []
+            
+                for c in node.get_children():
+                    if c.kind == CursorKind.PARM_DECL:
+                        args.append( (c.type.kind.spelling, c.displayname) )
+                    
+                func = [node.spelling,
+                        node.location.file.name,
+                        node.location.line,
+                        return_type.kind.spelling,
+                        args ]
+            
+                yield(func)
+
+                
+        elif node.kind == CursorKind.CALL_EXPR:
             infos = {
                 'name' : node.displayname,
                 'line' : node.location.line
                 }
-            yield( (caller, infos) )
-            
-        else :     
-            if node.kind == CursorKind.FUNCTION_DECL:
-                caller = node.spelling
 
-            for n in node.get_children():
-                for i in self.inspect(n, caller) :
-                    yield i
+            for module in self.modules[CursorKind.CALL_EXPR] :
+                module.run(node)
                 
-        
+            yield( (caller, infos) )
+
+            
+        for n in node.get_children():
+            for i in self.inspect(n, caller) :
+                yield i
+
+                
     def get_xref_calls(self, filename):
         """
         
         """
         self.parser = self.index.parse(filename, args=self.clang_args)
+
         if self.parser:
-              for node in self.inspect(self.parser.cursor, "root"):
+            if len(self.parser.diagnostics) :
+                for d in self.parser.diagnostics:
+                    cat, loc, msg = d.category_number, d.location, d.spelling
+                    if loc is None  :
+                        fil, lin = "Unknown", 0
+                    elif loc.file is None :
+                        fil, lin = "Unknown", loc.line
+                    else :
+                        fil, lin = loc.file.name, loc.line
+                        
+                    self.diags.append((cat, fil, lin, msg))
+            
+            for node in self.inspect(self.parser.cursor, "<OutOfScope>"):
                 yield node
 
-
-    def get_diagnostics(self):
-        """
-        
-        """       
-        if self.parser is None :
-            return []
-        
-        if len(self.parser.diagnostics) :
-            msg = []
-            for d in self.parser.diagnostics:
-                msg.append((d.category_number,
-                            d.location,
-                            d.spelling))
-
-            return msg
-
-        return []
-                          

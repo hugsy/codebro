@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Functions declaration in {{ project.name }} {% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="span12">
+    
+    {% if functions %}
+    <div class="pager">
+      <ul>
+	
+	{% if functions.has_previous %}
+	<li><a href="?page={{ functions.previous_page_number }}">Previous</a></li>
+        {% endif %}
+
+	<li>Page {{ functions.number }} of {{ functions.paginator.num_pages }}</li>
+	
+	{% if functions.has_next %}
+	<li><a href="?page={{ functions.next_page_number }}">Next</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+    
+    <table class="table table-hover">
+      <thead>
+	<tr>
+	  <td>Name</td>
+	  <td>File</td>
+	  <td>Line</td>
+	  <td>Link</td>
+	</tr>
+      </thead>
+      
+      <tbody>
+	{% for function in functions %}
+	<tr>
+	  <td>{{function.name}}</td>
+	  <td>{{function.file.name}}</td>
+	  <td>{{function.line}}</td>
+	  <td><a href="{% url browser.views.project_detail project.id %}?file={{function.file.name}}#line-{{function.line}}">here</a></td>
+	</tr>
+	{% endfor %}
+      </tbody>
+      
+    </table>
+  </div>
+</div>
+
+{% endblock %}

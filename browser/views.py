@@ -4,6 +4,7 @@ from browser.models import File
 from browser.models import Function 
 from browser.models import Argument
 from browser.models import Xref
+from browser.models import Debug
 
 from browser.forms import NewProjectForm, ProjectForm
 
@@ -11,6 +12,9 @@ from browser.helpers import valid_method_or_404
 from browser.helpers import handle_uploaded_file
 from browser.helpers import is_valid_file, is_project_parsed, is_project_xrefed
 from browser.helpers import generate_graph
+
+from codebro import settings
+from codebro.renderer import CodeBroRenderer
 
 from django.http import HttpResponse, Http404
 from django.shortcuts import render
@@ -24,11 +28,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core import serializers
 
-from codebro import settings
-from codebro.renderer import CodeBroRenderer
-
 from os import listdir, access, R_OK, unlink, rmdir
-from os.path import abspath, isdir, islink, join
+from os.path import abspath, isfile, isdir, islink, join
 
 from xml.sax import SAXParseException 
 
@@ -119,13 +120,15 @@ def project_detail(request, project_id):
     """
     show all details for a given project
     """
-    p = get_object_or_404(Project, pk=project_id)
+    data = []
+    hl = []
     
+    p = get_object_or_404(Project, pk=project_id)
     cur_file = request.GET.get('file', p.get_code_path())
     cur_file = abspath(cur_file)
-        
-    data = []
 
+    parent_dir = abspath(cur_file + "/..")
+    
     if not cur_file.startswith(p.get_code_path()):
         messages.error(request, "Invalid path")
 
@@ -133,16 +136,43 @@ def project_detail(request, project_id):
         messages.error(request, "Cannot browse symlink")
         
     elif isdir(cur_file):
-        data = listdir(cur_file) 
- 
+        data = [ "..", ]
+        dirs = []
+        files= []
+        
+        for x in listdir(cur_file):
+            if isdir(cur_file+'/'+x):
+                dirs.append(x+'/')
+            elif isfile(cur_file+'/'+x):
+                files.append(x)
+
+        dirs.sort()
+        files.sort()
+
+        data+= dirs
+        data+= files
+
+        
     else :
-        data = CodeBroRenderer(p).render(cur_file)
+
+        for x in request.GET.get('hl', '').split(",") :
+            try : hl.append( int(x) )
+            except ValueError : pass
+            
+        hl.sort()
+        
+        r = CodeBroRenderer(p, hl)
+        data = r.render(cur_file)
         
     ctx = {'project': p,
            'path': cur_file,
            'lines': data,
-           'is_dir': isdir(cur_file) 
+           'is_dir': isdir(cur_file),
+           'parent_dir' : parent_dir,
            }
+    
+    if len(hl) > 0:
+        ctx['jump_to'] = hl[0]
     
     return render(request, 'project/detail.html', ctx)
 
@@ -337,7 +367,27 @@ def project_analysis(request, project_id):
     
     """
     project = get_object_or_404(Project, pk=project_id)
-    ctx = {'project' : project , }
+
+    dbgs = []
+    class D:
+        category = None
+        filename = None
+        line = None
+        message = None
+        link = None
+        
+    for d in project.debug_set.iterator():
+        o = D()
+        o.category = Debug.level2str(d.category)
+        o.filename = d.filepath.replace(settings.SRC_PATH+'/','')
+        o.line = d.line
+        o.message = d.message
+        o.link = reverse("browser.views.project_detail", args=(project.id,))
+        o.link+= "?file=%s&hl=%d" % (d.filepath, d.line)
+        dbgs.append(o)
+        
+    ctx = {'project' : project , 
+           'dbgs' :  dbgs}
     return render(request, 'project/analysis.html', ctx)
 
 

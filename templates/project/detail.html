@@ -67,47 +67,26 @@
 	  <div id="analysis" class="accordion-body collapse">
 	    <div class="accordion-inner">
 	      
-	      <p>Parsed ?
+	      <p>
 	      {% if project.file_set.count > 0  %}
-		<i class="icon-ok"></i>
-		<input id="btn_parse"
-		       type="button"
-		       class="btn btn-mini btn-primary"
-		       onclick="dajax_init('parse', Dajaxice.browser.ajax_project_unparse, {{project.id}});"
-		       value="Delete!">
+	      <i class="icon-ok"></i> Parsed	      
+	      <br/>		
+	      [<a href="{% url browser.views.project_analysis project.id %}">Analysis module</a>]
+	      <br/>
 
-		<a href="{% url browser.views.project_analysis project.id %}">Analysis module</a>
-		
-	      {% else %}
-		<i class="icon-remove"></i>
-
-		<input id="btn_parse"
-		       type="button"
-		       class="btn btn-mini btn-primary"
-		       onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse, {{project.id}});" 
-		       value="Do it now!">
-	      {% endif %}
-	      </p>
-
-	      <hr>
-	      
-	      <p>XRef-ed ?
-	      {% if project.xref_set.count > 0  %}
-	      <i class="icon-ok"></i>
-	      <input id="btn_xref"
+	      <input id="btn_parse"
 		     type="button"
 		     class="btn btn-mini btn-primary"
-		     onclick="dajax_init('xref', Dajaxice.browser.ajax_project_unxref, {{project.id}});"
+		     onclick="dajax_init('parse', Dajaxice.browser.ajax_project_unparse, {{project.id}});" 
 		     value="Delete">
+	      {% else %}	      
+	      <i class="icon-remove"></i> Not Parsed
 	      
-	      {% else %}
-	      <i class="icon-remove"></i>
-	      <input id="btn_xref"
+	      <input id="btn_parse"
 		     type="button"
 		     class="btn btn-mini btn-primary"
-		     onclick="dajax_init('xref', Dajaxice.browser.ajax_project_xref, {{project.id}});"
-		     value="Do it now!">
-
+		     onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse, {{project.id}});" 
+		     value="Parse now!">
 	      {% endif %}
 	      </p>
 	      
@@ -127,8 +106,9 @@
 	  <div id="explore" class="accordion-body collapse in">
 	    <div class="accordion-inner">
 	      <div id="explorer">
-		<p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
+		
 {% include "project/file_browser.html"%}
+
 	      </div>
 	    </div>
 	  </div>

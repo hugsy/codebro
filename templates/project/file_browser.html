@@ -20,12 +20,22 @@ function function_menu(id, urls) {
 
   d[0].innerHTML = generate_menu(urls);
 }
+
 </script>
 
-
+<p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
 {% if is_dir %}
 <pre class="prettyprint linenums"><ol>{% for line in lines %}<li><a href="?file={{ path }}/{{ line }}">{{ line }}</a></li>{% endfor %}</ol></pre>
 {% else %}
+
+{% if jump_to > 0 %}
+<script>
+  function gotoanchor() { window.location.hash='line-{{ jump_to }}'; }
+  document.onload=gotoanchor();
+</script>
+{% endif %}
+
+<p> <i class="icon-circle-arrow-up"></i> [<a href="{%url browser.views.project_detail project.id%}?file={{parent_dir}}/">Browse directory</a>] </p>
 
 {# for files, output has been sanitized by pygments #}
 

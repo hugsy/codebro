@@ -92,32 +92,51 @@ class Xref(models.Model):
                                     self.called_function_line if self.called_function_line is not None else 0)
 
 
-class Debug(models.Model):
+class Diagnostic(models.Model):
+    
+    filepath = models.CharField(max_length=1024)
+    line = models.PositiveIntegerField()
+    message = models.TextField()
+
+    class Meta:
+        abstract = True
+        
+
+class Debug(Diagnostic):
     DIAG_LEVELS = (
-        (clang.cindex.Diagnostic.Ignored, "IGNORED"),
-        (clang.cindex.Diagnostic.Note, "NOTE"),
-        (clang.cindex.Diagnostic.Warning, "WARNING"),
-        (clang.cindex.Diagnostic.Error, "ERROR"),
-        (clang.cindex.Diagnostic.Fatal, "FATAL"),
+        (clang.cindex.Diagnostic.Ignored,  "IGNORED"),
+        (clang.cindex.Diagnostic.Note,     "NOTE"),
+        (clang.cindex.Diagnostic.Warning,  "WARNING"),
+        (clang.cindex.Diagnostic.Error,    "ERROR"),
+        (clang.cindex.Diagnostic.Fatal,    "FATAL"),
         )
 
     category = models.PositiveIntegerField(choices=DIAG_LEVELS,
                                            default=clang.cindex.Diagnostic.Note)
-    # file = models.ForeignKey(File)
-    filepath = models.CharField(max_length=1024)
-    line = models.PositiveIntegerField()
-    error_msg = models.TextField()
     project = models.ForeignKey(Project)
+    
+    @staticmethod
+    def level2str(level):
+        for i, s in Debug.DIAG_LEVELS:
+            if i == level:
+                return s
+        return ""
 
     
     def __unicode__(self):
         return "[%d] %s:%s - %s" % (self.category, self.project.name,
-                                    self.file, self. error_msg)
+                                    self.filepath, self.message)
 
+
+class Module(models.Model):
+    # uid  = models.PositiveIntegerField()
+    name = models.CharField(max_length=64)
+    project = models.ForeignKey(Project)
     
-    def level2str(self, level):
-        for i, s in DIAG_LEVELS:
-            if i == level:
-                return s
-        return ""
-        
+
+class ModuleDiagnostic(Diagnostic):
+    module = models.ForeignKey(Module)
+    
+    def __unicode__(self):
+        return "[%d] %s:%s - %s" % (self.name, self.module.project.name,
+                                    self.filepath, self.message)

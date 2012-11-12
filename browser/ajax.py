@@ -82,69 +82,21 @@ def ajax_project_unparse(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     ctx = {"status" : -1, "message": ""}
     
-    if is_project_xrefed(project):
-        ctx["status"]  = 1
-        ctx["message"] = "Project is xrefed, unset xref first."
+    for xref in project.xref_set.iterator():
+        xref.delete()
         
-    else:
-        for file in project.file_set.iterator():
-            for function in file.function_set.iterator():
-                for arg in function.argument_set.iterator():
-                    arg.delete()
+    for file in project.file_set.iterator():
+        for function in file.function_set.iterator():
+            for arg in function.argument_set.iterator():
+                arg.delete()
                 function.delete()
-            file.delete()
+        file.delete()
 
-        ctx["status"]  = 0
-        ctx["message"] = "Successfully unparsed ... Reloading page"
-    return simplejson.dumps(ctx)
-
-
-@dajaxice_register
-def ajax_project_xref(request, project_id):
-    """
-    
-    """
-    project = get_object_or_404(Project, pk=project_id)
-    ctx = {"status" : -1,
-           "message": ""}
-    
-    if not is_project_parsed(project):
-        ctx["status"]  = 1
-        ctx["message"] = "Project '%s' must be parsed first"%project.name
-        return simplejson.dumps(ctx)
-
-    if is_project_xrefed(project):
-        ctx["status"]  = 1
-        ctx["message"] = "Project '%s' already xref-ed"%project.name
-        return simplejson.dumps(ctx)
-      
-    if clang_xref_project(request, project):
-        ctx["status"]  =  0
-        ctx["message"] = "Successfully xref-ed ... Reloading page"
-    else :
-        ctx["status"]  =  1
-        ctx["message"] =  "Failed to xref..."
+    for dbg in project.debug_set.iterator():
+        dbg.delete()
         
-    return simplejson.dumps(ctx)
-    
-
-@dajaxice_register
-def ajax_project_unxref(request, project_id):
-    """
-    
-    """
-    project = get_object_or_404(Project, pk=project_id)
-    ctx = {"status" : -1, "message": ""}
-    
-    if not is_project_xrefed(project):
-        ctx["status"]  = 1
-        ctx["message"] = "Cannot xrefed what has not been xrefed first."
-    else:
-        for xref in project.xref_set.iterator():
-            xref.delete()
-            
-        ctx["status"]  = 0
-        ctx["message"] = "Successfully un-xrefed... Reloading page"
+    ctx["status"]  = 0
+    ctx["message"] = "Successfully unparsed ... Reloading page"
     return simplejson.dumps(ctx)
 
 
@@ -156,7 +108,6 @@ def ajax_add_funcgraph_link(request, f, d, x):
     valid_method_or_404(request, ["POST",])
     dajax = Dajax()
 
-    # depth = d if d is not None else -1
     try : depth = int(d)
     except ValueError : depth = -1
     xref = x if x is not None else True
@@ -204,3 +155,4 @@ def ajax_add_funcgraph_link(request, f, d, x):
                                                               args=(basename,)))
     dajax.assign('#table-graphs', 'innerHTML', line)
     return dajax.json()
+

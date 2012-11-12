@@ -36,7 +36,7 @@ Requires
 * llvm + clang (with python bindings)
 * dajax & dajaxice
 
-    $ pip2 install python-dajax && pip2 install python-dajaxice
+     $ pip2 install python-dajax && pip2 install python-dajaxice
 
 should do it in most cases
 * a database to store data (sqlite, mysql, pgsql, etc.)
@@ -50,11 +50,11 @@ Install
 * Edit codebro/codebro/settings.py to match your own configuration;
 * Create database structure + initial data :
 
-    $ ./manage.py syndb
+     $ ./manage.py syndb
 
 * Launch the server
 
-    $ ./manage.py runserver
+     $ ./manage.py runserver
 
 * You can now add your own applications to browse.
 

@@ -1,0 +1,31 @@
+
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>File</th>
+      <th>Line</th>
+      <th>Error</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for dbg in dbgs %}
+    <tr>
+      <td>{{dbg.category}}</td>
+      <td>{{dbg.filename}}</td>
+      <td>{{dbg.line}}</td>
+      <td>{{dbg.message}}</td>
+      <td>
+	{% if dbg.filepath != "Unknown" %}
+	<a href="{{dbg.link}}">Link</a>
+	{% else %}
+	Link
+	{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

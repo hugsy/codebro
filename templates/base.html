@@ -46,11 +46,11 @@
       {% block content %}
       {% endblock %}
 
-      <br/>
-      <br/>
-
     </div>
     <!-- end of body -->
+      <br/>
+      <br/>
+      <br/>
 
     {% block footer %}
     <div class="navbar navbar-inverse navbar-fixed-bottom">
@@ -65,14 +65,14 @@
 	  <a class="brand" href="/">CodeBro!</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li><a href="{% url browser.views.index %}">Home</a></li>
-              <li><a href="{% url browser.views.list %}">List Projects</a></li>
-	      <li><a href="{% url browser.views.project_new %}">Add a Project</a></li>
-              <li><a href="{% url about %}">About</a></li>
+              <li><a href="{% url 'browser.views.index' %}">Home</a></li>
+              <li><a href="{% url 'browser.views.list' %}">List Projects</a></li>
+	      <li><a href="{% url 'browser.views.project_new' %}">Add a Project</a></li>
+              <li><a href="{% url 'about' %}">About</a></li>
             </ul>
 
 	    {% if project %}
-	    <form class="navbar-form pull-right" action="{% url browser.views.project_search project.id%}" method="POST">
+	    <form class="navbar-form pull-right" action="{% url 'browser.views.project_search' project.id %}" method="POST">
 	      <input type="text" name="pattern" class="input-medium search-query" placeholder="Search in {{project.name}}"/>
               <button type="submit" class="btn">Go</button>
 	      {% csrf_token %}
@@ -80,7 +80,7 @@
 
 	    {% else %}
 
-	    <form class="navbar-form pull-right" action="{% url browser.views.search %}" method="POST">
+	    <form class="navbar-form pull-right" action="{% url 'browser.views.search' %}" method="POST">
 	      <input type="text" name="pattern" class="input-medium search-query" placeholder="Search"/>
               <button type="submit" class="btn">Go</button>
 	      {% csrf_token %}

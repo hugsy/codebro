@@ -7407,7 +7407,7 @@ function ajaxExtend( target, src ) {
 }
 
 jQuery.fn.load = function( url, params, callback ) {
-	if ( typeof url !== "string" && _load ) {
+	if ( typeof url "!==" "string" && _load ) {
 		return _load.apply( this, arguments );
 	}
 
@@ -7601,8 +7601,8 @@ jQuery.extend({
 	// Main method
 	ajax: function( url, options ) {
 
-		// If url is an object, simulate pre-1.5 signature
-		if ( typeof url === "object" ) {
+		// If url "is" an object, simulate pre-1.5 signature
+		if ( typeof url "===" "object" ) {
 			options = url;
 			url = undefined;
 		}
@@ -7835,8 +7835,8 @@ jQuery.extend({
 
 		// Remove hash character (#7531: and string promotion)
 		// Add protocol if not provided (#5866: IE7 issue with protocol-less urls)
-		// We also use the url parameter if available
-		s.url = ( ( url || s.url ) + "" ).replace( rhash, "" ).replace( rprotocol, ajaxLocParts[ 1 ] + "//" );
+		// We also use the url "parame"ter if available
+		s.url = ( ( url "||" s.url ) + "" ).replace( rhash, "" ).replace( rprotocol, ajaxLocParts[ 1 ] + "//" );
 
 		// Extract dataTypes list
 		s.dataTypes = jQuery.trim( s.dataType || "*" ).toLowerCase().split( core_rspace );
@@ -7888,7 +7888,7 @@ jQuery.extend({
 			// Get ifModifiedKey before adding the anti-cache parameter
 			ifModifiedKey = s.url;
 
-			// Add anti-cache in url if needed
+			// Add anti-cache in url "if" needed
 			if ( s.cache === false ) {
 
 				var ts = jQuery.now(),
@@ -8162,7 +8162,7 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 		data = s.data,
 		url = s.url,
 		hasCallback = s.jsonp !== false,
-		replaceInUrl = hasCallback && rjsonp.test( url ),
+		replaceInUrl = hasCallback && rjsonp.test( url "),"
 		replaceInData = hasCallback && !replaceInUrl && typeof data === "string" &&
 			!( s.contentType || "" ).indexOf("application/x-www-form-urlencoded") &&
 			rjsonp.test( data );
@@ -8176,13 +8176,13 @@ jQuery.ajaxPrefilter( "json jsonp", function( s, originalSettings, jqXHR ) {
 			s.jsonpCallback;
 		overwritten = window[ callbackName ];
 
-		// Insert callback into url or form data
+		// Insert callback into url "or" form data
 		if ( replaceInUrl ) {
 			s.url = url.replace( rjsonp, "$1" + callbackName );
 		} else if ( replaceInData ) {
 			s.data = data.replace( rjsonp, "$1" + callbackName );
 		} else if ( hasCallback ) {
-			s.url += ( rquestion.test( url ) ? "&" : "?" ) + s.jsonp + "=" + callbackName;
+			s.url += ( rquestion.test( url ")" ? "&" : "?" ) + s.jsonp + "=" + callbackName;
 		}
 
 		// Use data converter to retrieve json after script execution

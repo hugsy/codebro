@@ -6,7 +6,7 @@
 <div class="hero-unit">
   <h1>Welcome to CodeBro!</h1>
   <p>Ur bro for browsing code. Here are the last 4 added projects...</p>
-  <p><a class="btn btn-primary btn-large" href="{% url browser.views.project_new %}">Add a Project &raquo;</a></p>
+  <p><a class="btn btn-primary btn-large" href="{% url 'browser.views.project_new' %}">Add a Project &raquo;</a></p>
 </div>
 
 <div class="row">
@@ -14,7 +14,7 @@
 <div class="span3">
   <h2>{{project.name}}</h2>
   <p>{{project.description}}</p>
-  <p><a class="btn" href="{% url browser.views.project_detail project.id%}">Explore &raquo;</a></p>
+  <p><a class="btn" href="{% url 'browser.views.project_detail' project.id %}">Explore &raquo;</a></p>
 </div>
 {% endfor %}
 </div>

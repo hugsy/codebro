@@ -9,7 +9,7 @@
     <h3> Analysis module for '{{ project.name }}'</h3>
     
     <ul class="nav nav-tabs" id="anal">
-      <li><a href="{% url browser.views.project_detail project.id %}" >Back to Browser</a></li>
+      <li><a href="{% url 'browser.views.project_detail' project.id %}" >Back to Browser</a></li>
       <li class="active">
 	<a href="#parse" data-toggle="tab">Parse</a></li>
       <li><a href="#xref" data-toggle="tab">Xref-ing</a></li>

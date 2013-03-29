@@ -34,10 +34,8 @@ class FormatStringModule(Module):
         caller_name = node.displayname
         
         # fmt str method 1 : lookup for known functions (printf, fprintf, sprintf, etc.)
-        touchy_functions = [ ('printf', 1),
-                             ('fprintf', 1),
-                             ('sprintf', 1)]
-
+        # obsolete : handled by -Wformat-security
+        
         # fmt str method 2 : compare args in static strings at function call
         number_of_args = -1
         line = ""
@@ -89,6 +87,7 @@ class FormatStringModule(Module):
         with open(node.location.file.name, 'r') as f:
             data = f.read()
             res = data[start:end].strip()
-        
+
+        print len(res), ":", res
         return res
 

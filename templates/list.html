@@ -67,7 +67,7 @@
 	</td>
 
 	<td>	  
-	  <a href="{%url browser.views.project_detail project.id %}">Explore
+	  <a href="{% url 'browser.views.project_detail' project.id %}">Explore
 	  <i class="icon-forward"></i>
 	  </a>
 	  </span>
@@ -83,7 +83,7 @@
       <h4>Warning!</h4>
       No project uploaded yet... Start now and
       <center>
-	<p><a class="btn btn-primary btn-large" href="{%url browser.views.project_new %}">
+	<p><a class="btn btn-primary btn-large" href="{% url 'browser.views.project_new' %}">
 	    Add a Project&raquo;</a></p>
       </center>
     </div>

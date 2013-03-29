@@ -39,6 +39,7 @@ class Project(models.Model):
     language = models.ForeignKey(Language)
     added_date = models.DateTimeField()
     code_path = models.TextField(max_length=64)
+    is_parsed =  models.BooleanField(default=False)
     
     def __unicode__(self):
         return self.name    

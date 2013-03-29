@@ -51,7 +51,7 @@ class ClangParser:
                 m.register()
                 
                 if settings.DEBUG :
-                    print("Added module '%s'" % m.name)
+                    print("Using module '%s' on project '%s'" % (m.name, m.module.project.name))
 
             
     def include_sub_dirs(self):
@@ -129,6 +129,7 @@ class ClangParser:
         """
         
         """
+        print ("Parsing '%s' with args : %s" % (filename, self.clang_args))
         self.parser = self.index.parse(filename, args=self.clang_args)
 
         if self.parser:

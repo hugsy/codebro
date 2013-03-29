@@ -19,7 +19,7 @@
       <td>{{m.line}}</td>
       <td>{{m.message}}</td>
       <td>
-	<a href="{% url browser.views.project_detail project.id%}?file={{m.filepath}}&amp;hl={{m.line}}">Link</a>
+	<a href="{% url 'browser.views.project_detail' project.id%}?file={{m.filepath}}&amp;hl={{m.line}}">Link</a>
       </td>
     </tr>
     {% endfor %}

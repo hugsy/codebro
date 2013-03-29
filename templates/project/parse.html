@@ -3,7 +3,7 @@
   <li><em>{{ project.function_set.count }}</em> functions declared
 </ul>
 
-<a href="{% url browser.views.project_functions project.id %}">
+<a href="{% url 'browser.views.project_functions' project.id %}">
   Go to functions declaration list
 </a>
 

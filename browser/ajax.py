@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from codebro import settings
 from codebro.analyzer import clang_parse_project, clang_xref_project
 
-from browser.models import Project, Function, Xref
+from browser.models import Project, Function, Xref, ModuleDiagnostic
 from browser.helpers import is_project_parsed, is_project_xrefed
 from browser.helpers import valid_method_or_404
 from browser.helpers import generate_graph
@@ -59,7 +59,7 @@ def ajax_project_parse(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     ctx = {"status" : -1, "message": ""}
 
-    if is_project_parsed(project):
+    if project.is_parsed:
         ctx["status"] = 1
         ctx["message"] = "Already parsed"
         return simplejson.dumps(ctx)
@@ -81,6 +81,12 @@ def ajax_project_unparse(request, project_id):
     """
     project = get_object_or_404(Project, pk=project_id)
     ctx = {"status" : -1, "message": ""}
+
+    for m in ModuleDiagnostic.objects.filter(module__project=project):
+        m.delete()
+
+    for m in project.module_set.iterator():
+        m.delete()
     
     for xref in project.xref_set.iterator():
         xref.delete()

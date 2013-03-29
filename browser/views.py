@@ -47,7 +47,7 @@ def index(request):
 
 
 
-def grep(pat, filename):
+def grep(pattern, filename):
     """
     shitty under-optimized grep function
     """
@@ -57,7 +57,7 @@ def grep(pat, filename):
         
         line_num = 1
         for line in f.xreadlines():
-            match = pat.search(line)
+            match = pattern.search(line)
             if match is not None:
                 blocks.append([line_num, match.string])
             line_num += 1

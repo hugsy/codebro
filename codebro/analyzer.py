@@ -18,8 +18,7 @@ def clang_parse_project(r, p):
     """
 
     clang_xref_project(r, p)
-    p.is_parsed = True                
-
+    p.is_parsed = True
     p.save()
     messages.info(r, "Successfully parsed")  
     return True

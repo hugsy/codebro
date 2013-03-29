@@ -40,7 +40,7 @@
 	  <td>{{function.name}}</td>
 	  <td>{{function.file.name}}</td>
 	  <td>{{function.line}}</td>
-	  <td><a href="{% url browser.views.project_detail project.id %}?file={{function.file.name}}#line-{{function.line}}">here</a></td>
+	  <td><a href="{% url 'browser.views.project_detail' project.id %}?file={{function.file.name}}#line-{{function.line}}">here</a></td>
 	</tr>
 	{% endfor %}
       </tbody>

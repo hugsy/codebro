@@ -35,7 +35,7 @@ function function_menu(id, urls) {
 </script>
 {% endif %}
 
-<p> <i class="icon-circle-arrow-up"></i> [<a href="{%url browser.views.project_detail project.id%}?file={{parent_dir}}/">Browse directory</a>] </p>
+<p> <i class="icon-circle-arrow-up"></i> [<a href="{%url 'browser.views.project_detail' project.id%}?file={{parent_dir}}/">Browse directory</a>] </p>
 
 {# for files, output has been sanitized by pygments #}
 

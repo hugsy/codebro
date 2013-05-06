@@ -206,7 +206,7 @@ class CodeBroRenderer:
         
         """
         self.lexer = get_lexer_by_name("c", stripall=True)
-        self.formatter = CodeBroHtmlFormatter(linenos=True,
+        self.formatter = CodeBroHtmlFormatter(linenos="inline",
                                               cssclass="codebro",
                                               anchorlinenos=True,
                                               lineanchors="line",

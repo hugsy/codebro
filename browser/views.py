@@ -108,8 +108,10 @@ def project_search(request, project_id):
     f = File.objects.filter(project=p)
     return search_files(request, f, p)
 
+
 def search(request):
     return search_files(request, File.objects.all())
+
 
 def list(request):
     """
@@ -160,6 +162,7 @@ def project_detail(request, project_id):
         for x in listdir(cur_file):
             if isdir(cur_file+'/'+x):
                 dirs.append(x+'/')
+                
             elif isfile(cur_file+'/'+x):
                 files.append(x)
 
@@ -181,15 +184,15 @@ def project_detail(request, project_id):
         r = CodeBroRenderer(p, hl)
         data = r.render(cur_file)
         
-    ctx = {'project': p,
-           'path': cur_file,
-           'lines': data,
-           'is_dir': isdir(cur_file),
-           'parent_dir' : parent_dir,
-           }
+    ctx = {}
+    ctx['project'] 		= p
+    ctx['path'] 		= cur_file
+    ctx['lines'] 		= data
+    ctx['is_dir']	  	= isdir(cur_file)
+    ctx['parent_dir'] 	= parent_dir
     
     if len(hl) > 0:
-        ctx['jump_to'] = hl[0]
+        ctx['jump_to'] 	= hl[0]
     
     return render(request, 'project/detail.html', ctx)
 
@@ -260,15 +263,18 @@ def project_edit(request, project_id):
 
         if not name.isalnum:
             messages.error(request, "name must be alnum")
+            
         elif not description.isalnum:
             messages.error(request, "description must be alnum")
+            
         else :
             project.name = escape(name)
             project.description = escape(description)
             project.save()
+            
         return redirect(reverse('browser.views.project_detail', args=(project.id, )))
         
-    else : # request.method == 'GET' 
+    else: # request.method == 'GET' 
         form = ProjectForm(instance=project)
         return render(request, 'project/new.html', {'form': form, 'project_id': project.id})
 

@@ -6,28 +6,28 @@
 
 
 <script type="text/javascript">
-
-  function disable(tag){
-  $('#btn_'+tag)[0].disabled = 'Disabled';
-  $('#btn_'+tag)[0].value = 'Please Wait...';  
+  
+  function disable(tag) {
+    $('#btn_'+tag)[0].disabled = 'Disabled';
+    $('#btn_'+tag)[0].value = 'Please Wait...';  
   }
   
-  function dajax_init(tag, func, pid){
-  disable(tag);
-  func(dajax_callback, {'project_id': pid});
-
-  //setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
+  function dajax_init(tag, func, pid) {
+    disable(tag);
+    func(dajax_callback, {'project_id': pid});
+    //setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
   }
   
   function dajax_callback(data) {
-  bootbox.alert(data.message);
-  if(data.status != 0) {
-   $('#btn_parse')[0].removeAttribute('disabled');
-   $('#btn_parse')[0].value = 'Retry';
-  } else {
-   setTimeout(function(){location.reload();},3000);
+    bootbox.alert(data.message);
+    if(data.status != 0) {
+      $('#btn_parse')[0].removeAttribute('disabled');
+      $('#btn_parse')[0].value = 'Retry';
+    } else {
+      setTimeout( function(){location.reload();}, 3000);
+    }
   }
-  }
+  
 </script>
 
 

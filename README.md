@@ -29,35 +29,41 @@ That being said, if you still wanna go further, read below.
 
 Requires
 --------
-* python 2.6+
-* django 1.4.2
+* python 2.7+
+* django 1.5
 * pydot
 * pygments
 * llvm + clang (with python bindings)
 * dajax & dajaxice
 
-     $ pip2 install python-dajax && pip2 install python-dajaxice
+` $ pip2 install python-dajax && pip2 install python-dajaxice ` should do it in
+most cases 
 
-should do it in most cases
 * a database to store data (sqlite, mysql, pgsql, etc.)
 
 
 Install
 -------
 * Install all required stuff;
-* Make sure it works ! (python -c 'import django; import clang;' && echo 'all good') 
+* Make sure it works ! Test your configuration with
+
+```
+$ python -c 'import django; import clang;' && echo 'all good')
+```
+if you see 'all good', well, then it's good !
+
 * Clone repository;
 * Edit codebro/codebro/settings.py to match your own configuration;
 * Create database structure + initial data :
-
-     $ ./manage.py syncdb
-
+```
+$ ./manage.py syncdb
+```
 * Launch the server
-
-     $ ./manage.py runserver
-
+```
+$ ./manage.py runserver
+```
 * You can now add your own applications to browse.
 
-## Licence & Author
+## License & Author
 Written by @_hugsy_ and released under GPL v.2
 

@@ -2,7 +2,7 @@ from dajax.core import Dajax
 from django.core import serializers
 from dajaxice.decorators import dajaxice_register
 from dajaxice.exceptions import DajaxiceError
-from django.utils import simplejson
+import json
 from django.shortcuts import get_object_or_404
 from django.utils.html import escape
 from django.core.urlresolvers import reverse
@@ -62,7 +62,7 @@ def ajax_project_parse(request, project_id):
     if project.is_parsed:
         ctx["status"] = 1
         ctx["message"] = "Already parsed"
-        return simplejson.dumps(ctx)
+        return json.dumps(ctx)
 
     if clang_parse_project(request, project):
         ctx["status"]  = 0
@@ -71,7 +71,7 @@ def ajax_project_parse(request, project_id):
         ctx["status"]  = 1
         ctx["message"] = "Failed to parse..."
         
-    return simplejson.dumps(ctx)
+    return json.dumps(ctx)
 
 
 @dajaxice_register
@@ -103,7 +103,7 @@ def ajax_project_unparse(request, project_id):
         
     ctx["status"]  = 0
     ctx["message"] = "Successfully unparsed ... Reloading page"
-    return simplejson.dumps(ctx)
+    return json.dumps(ctx)
 
 
 @dajaxice_register
@@ -157,8 +157,10 @@ def ajax_add_funcgraph_link(request, f, d, x):
     fmt_str+= "<td width=\"30%\"><a href=\"{3}\">{0}</a></td>"
     fmt_str+= "</tr>"
 
-    line = fmt_str.format(caller_f.name, xref, depth, reverse('browser.views.get_cache',
-                                                              args=(basename,)))
+    line = fmt_str.format(caller_f.name,
+                          xref,
+                          depth,
+                          reverse('browser.views.get_cache',args=(basename,)))
     dajax.assign('#table-graphs', 'innerHTML', line)
     return dajax.json()
 

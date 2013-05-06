@@ -50,7 +50,7 @@ Install
 * Edit codebro/codebro/settings.py to match your own configuration;
 * Create database structure + initial data :
 
-     $ ./manage.py syndb
+     $ ./manage.py syncdb
 
 * Launch the server
 

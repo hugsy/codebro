@@ -16,6 +16,7 @@ class ProjectForm(ModelForm):
         
         exclude = ("added_date",
                    "code_path",
+                   "is_parsed"
                    )
         
         widgets = {

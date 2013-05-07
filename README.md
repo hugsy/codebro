@@ -44,25 +44,36 @@ most cases
 
 Install
 -------
-* Install all required stuff;
-* Make sure it works ! Test your configuration with
+* Get and install clang-llvm, make sure Python bindings are compiled as well
+(http://clang.llvm.org/get_started.html)
 
+* Create a Python VirtualEnv and move to it
 ```
-$ python -c 'import django; import clang;' && echo 'all good')
+$ mkvirtualenv codebro
+[...]
+$ workon codebro
 ```
-if you see 'all good', well, then it's good !
 
-* Clone repository;
-* Edit codebro/codebro/settings.py to match your own configuration;
-* Create database structure + initial data :
+* Clone CodeBro and install pre-requisites
+```
+$ git clone https://github.com/hugsy/codebro.git && pip install -r codebro/requirements.txt
+```
+
+* Make sure it works :
+```
+$ python -c 'import django; import clang;' && echo 'Party can start now!'
+```
+
+* Create database structure, and fill with initial initial data :
 ```
 $ ./manage.py syncdb
 ```
+
 * Launch the server
 ```
 $ ./manage.py runserver
 ```
-* You can now add your own applications to browse.
+* You can now add, browse and parse applications.
 
 ## License & Author
 Written by @_hugsy_ and released under GPL v.2

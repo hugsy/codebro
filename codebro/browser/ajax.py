@@ -1,25 +1,22 @@
-from dajax.core import Dajax
-from django.core import serializers
-from dajaxice.decorators import dajaxice_register
-from dajaxice.exceptions import DajaxiceError
 import json
+import hashlib
+import xml.sax
+
+from django.core import serializers
+from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404
 from django.utils.html import escape
-from django.core.urlresolvers import reverse
+from dajax.core import Dajax
+from dajaxice.decorators import dajaxice_register
+from dajaxice.exceptions import DajaxiceError
 
 from codebro import settings
-from codebro.analyzer import clang_parse_project, clang_xref_project
-
+from analyzer.analyzer import clang_parse_project, clang_xref_project
 from browser.models import Project, Function, Xref, ModuleDiagnostic
 from browser.helpers import is_project_parsed, is_project_xrefed
 from browser.helpers import valid_method_or_404
 from browser.helpers import generate_graph
 
-from xml.sax import SAXParseException
-
-from os import access, R_OK
-
-from hashlib import sha1
 
 
 @dajaxice_register
@@ -134,7 +131,7 @@ def ajax_add_funcgraph_link(request, f, d, x):
          if not is_project_xrefed(project):
              return dajax.json()
          
-    except SAXParseException:
+    except xml.sax.SAXParseException:
         return dajax.json()
 
     
@@ -143,10 +140,10 @@ def ajax_add_funcgraph_link(request, f, d, x):
     base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
     base+= "@%d" % depth  if depth > 0 else 0
 
-    basename = sha1(base).hexdigest() + ".svg"
+    basename = hashlib.sha1(base).hexdigest() + ".svg"
     pic_name = settings.CACHE_PATH + "/" + basename
 
-    if not access(pic_name, R_OK):
+    if not os.access(pic_name, os.R_OK):
         if generate_graph(pic_name, project, caller_f, xref, depth)==False :
             return dajax.json()
 

@@ -1,8 +1,6 @@
 *.pyc
-src/
-db.sqlite3
+codebro/cache/*
+codebro/db/codebro.sqlite3
+codebro/sources/
 TAGS
-cache/*
-tests
-tags
-todo
+TODO

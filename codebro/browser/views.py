@@ -1,20 +1,7 @@
-from browser.models import Project 
-from browser.models import Language
-from browser.models import File
-from browser.models import Function 
-from browser.models import Argument
-from browser.models import Xref
-from browser.models import Debug
-
-from browser.forms import NewProjectForm, ProjectForm
-
-from browser.helpers import valid_method_or_404
-from browser.helpers import handle_uploaded_file
-from browser.helpers import is_valid_file, is_project_parsed, is_project_xrefed
-from browser.helpers import generate_graph
-
-from codebro import settings
-from codebro.renderer import CodeBroRenderer
+from os import listdir, access, R_OK, unlink, rmdir
+from os.path import abspath, isfile, isdir, islink, join
+import hashlib 
+import re
 
 from django.http import HttpResponse, Http404
 from django.shortcuts import render
@@ -28,14 +15,22 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core import serializers
 
-from os import listdir, access, R_OK, unlink, rmdir
-from os.path import abspath, isfile, isdir, islink, join
+from browser.models import Project 
+from browser.models import Language
+from browser.models import File
+from browser.models import Function 
+from browser.models import Argument
+from browser.models import Xref
+from browser.models import Debug
+from browser.helpers import valid_method_or_404
+from browser.helpers import handle_uploaded_file
+from browser.helpers import is_valid_file, is_project_parsed, is_project_xrefed
+from browser.helpers import generate_graph
+from browser.forms import NewProjectForm, ProjectForm
 
-from xml.sax import SAXParseException 
+from codebro import settings
+from analyzer.renderer import CodeBroRenderer
 
-from hashlib import sha1
-
-import re
 
 
 def index(request):
@@ -347,7 +342,7 @@ def project_draw(request, project_id):
     base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
     base+= "@%d" % depth  if depth > 0 else ""
 
-    basename = sha1(base).hexdigest() + ".svg"
+    basename = hashlib.sha1(base).hexdigest() + ".svg"
     pic_name = settings.CACHE_PATH + "/" + basename 
     
     if not access(pic_name, R_OK):

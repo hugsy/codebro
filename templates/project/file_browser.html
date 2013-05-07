@@ -26,7 +26,26 @@ function function_menu(id, urls) {
   d[0].innerHTML = generate_menu(urls);
 }
 
+
+
+
+$(document).ready(function() {
+$("#canvas_code").click(function () {
+    $(this).unhighlight();
+});
+
+  $("#canvas_code").dblclick(function () {
+    var word = window.getSelection();
+alert( $(this).name);
+    $(this).highlight(word);
+  });
+
+});
+
 </script>
+
+<!-- file content canvas -->
+<div id="canvas_code">
 
 <p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
 {% if is_dir %}
@@ -53,3 +72,6 @@ function function_menu(id, urls) {
 
 <div id="function_menu" style="zIndex:1; visibility: hidden; background-color: white; width: 300px; border:
      1px solid black;"></div>
+
+</div>
+<!-- end of canvas -->

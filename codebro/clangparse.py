@@ -109,10 +109,9 @@ class ClangParser:
 
                 
         elif node.kind == CursorKind.CALL_EXPR:
-            infos = {
-                'name' : node.displayname,
-                'line' : node.location.line
-                }
+            infos = {}
+            infos['name'] = node.displayname
+            infos['line'] = node.location.line
 
             for module in self.modules[CursorKind.CALL_EXPR] :
                 module.run(node)

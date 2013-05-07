@@ -4,14 +4,14 @@
 import os
 
 ########### CHANGE THOSE SETTINGS ###############
-APP_PATH = os.getenv("HOME") + "/code/codebro"
-SRC_PATH = APP_PATH + "/src"
-MAX_UPLOAD_SIZE = 104857600 # 100 MB maximum archive size
-CACHE_PATH = APP_PATH + "/cache"
-SQLITE_DB_PATH = APP_PATH + "/db.sqlite3"
+APP_PATH		= os.getenv("HOME") + "/code/codebro"
+SRC_PATH		= APP_PATH + "/src"
+CACHE_PATH	 	= APP_PATH + "/cache"
+DB_PATH		 	= APP_PATH + "/db.sqlite3"
+MAX_UPLOAD_SIZE = 100 * 1024 * 1024 
+
 CODEBRO_KEY = "c0d3Br0_k1ck_@$$"
-CLANG_PARSE_OPTIONS = [ 
-                        "-Wextra",
+CLANG_PARSE_OPTIONS = [ "-Wextra",
                         "-Wformat-security",
                         "-I/usr/lib/gcc/x86_64-unknown-linux-gnu/4.7.2/include",
                         "-I/usr/include/",
@@ -31,7 +31,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': SQLITE_DB_PATH,                 # Or path to database file if using sqlite3.
+        'NAME': DB_PATH,                 # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -91,7 +91,7 @@ MIDDLEWARE_CLASSES = (
 
 
 TEMPLATE_DIRS = (
-    APP_PATH+"/templates"
+    APP_PATH + "/templates"
 )
 
 INSTALLED_APPS = (

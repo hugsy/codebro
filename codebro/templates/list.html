@@ -34,7 +34,8 @@
 	  <th>Name</th>
 	  <th>Description</th>
 	  <th>Language</th>
-	  <th>Added date</th>
+	  <th>Created date</th>
+	  <th>Modified date</th>
 	  <th>Parsed?</th>	  
 	  <th>XRefed?</th>
 	  <th>Link</th>
@@ -48,7 +49,8 @@
 	<td>{{ project.name }}</td>
 	<td>{{ project.description }}</td>
 	<td>{{ project.language }}</td>
-	<td>{{ project.added_date }}</td>
+	<td>{{ project.created }}</td>
+	<td>{{ project.modified }}</td>
 
 	<td>
 	{% if project.function_set.count > 0 %}

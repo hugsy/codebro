@@ -1,17 +1,11 @@
-from codebro.clangparse import ClangParser
+
 from django.contrib import messages
 
-from browser.models import File
-from browser.models import Function
-from browser.models import Argument
-from browser.models import Xref
-from browser.models import Debug
-
-from threading import Thread
-
 from codebro import settings
+from .clangparse import ClangParser
+from .models import File, Function, Argument, Xref, Debug
 
-    
+
 def clang_parse_project(r, p):
     """
     

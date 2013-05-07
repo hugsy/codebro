@@ -15,16 +15,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ValidationError, MultipleObjectsReturned
 from django.core import serializers
 
-from browser.models import Project 
-from browser.models import Language
-from browser.models import File
-from browser.models import Function 
-from browser.models import Argument
-from browser.models import Xref
-from browser.models import Debug
+from browser.models import Project, Language
+from analyzer.models import File, Function, Argument, Xref, Debug
 from browser.helpers import valid_method_or_404
 from browser.helpers import handle_uploaded_file
-from browser.helpers import is_valid_file, is_project_parsed, is_project_xrefed
+from browser.helpers import is_valid_file
 from browser.helpers import generate_graph
 from browser.forms import NewProjectForm, ProjectForm
 
@@ -37,7 +32,7 @@ def index(request):
     """
     index page
     """
-    ctx = {'projects': Project.objects.all().order_by('-added_date')[:4]}
+    ctx = {'projects': Project.objects.all().order_by('-created')[:4]}
     return render(request, 'index.html', ctx)
 
 
@@ -138,12 +133,12 @@ def project_detail(request, project_id):
     hl = []
     
     p = get_object_or_404(Project, pk=project_id)
-    cur_file = request.GET.get('file', p.get_code_path())
+    cur_file = request.GET.get('file', p.code_path)
     cur_file = abspath(cur_file)
 
     parent_dir = abspath(cur_file + "/..")
     
-    if not cur_file.startswith(p.get_code_path()):
+    if not cur_file.startswith(p.code_path):
         messages.error(request, "Invalid path")
 
     elif islink(cur_file):
@@ -236,8 +231,7 @@ def project_add(request, form):
     p.name = form.cleaned_data['name']
     p.description = form.cleaned_data['description'] 
     p.language = form.cleaned_data['language']
-    p.code_path = p.name
-    p.added_date = timezone.now()
+    p.source_path = p.name
     p.full_clean()
     p.save()
         
@@ -288,9 +282,9 @@ def project_delete(request, project_id):
 
     project = get_object_or_404(Project, pk=project_id)
     name = project.name
-    fullpath = project.get_code_path()
+    fullpath = project.code_path
 
-    if is_project_xrefed(project) or is_project_parsed(project):
+    if project.is_parsed:
         messages.error(request, "Project '%s' must be unparsed & unxrefed first" % name)
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
@@ -310,7 +304,7 @@ def project_draw(request, project_id):
     
     project = get_object_or_404(Project, pk=project_id)
 
-    if not is_project_xrefed(project):
+    if not project.is_parsed:
         messages.error(request, "Project must be xref-ed first")
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
@@ -342,7 +336,7 @@ def project_draw(request, project_id):
     base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
     base+= "@%d" % depth  if depth > 0 else ""
 
-    basename = hashlib.sha1(base).hexdigest() + ".svg"
+    basename = hashlib.sha256(base).hexdigest() + ".svg"
     pic_name = settings.CACHE_PATH + "/" + basename 
     
     if not access(pic_name, R_OK):

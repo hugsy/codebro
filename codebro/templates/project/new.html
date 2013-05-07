@@ -23,7 +23,7 @@
 	  {% if project_id < 0  %}
 	  action="{% url 'browser.views.project_new' %}"
 	  {% else %}
-	  action="{% url 'browser.views.project_edit project_id' %}"
+	  action="{% url 'browser.views.project_edit' project_id %}"
 	  {% endif %}
 	  method="POST"
 	  enctype="multipart/form-data">

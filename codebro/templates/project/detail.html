@@ -47,7 +47,8 @@
 	  <div id="description" class="accordion-body collapse">
 	    <div class="accordion-inner">
 	      <p>Language : {{ project.language }}</p>
-	      <p>Added: {{ project.added_date }} </p>
+	      <p>Created: {{ project.created }} </p>
+	      <p>Last modified: {{ project.modified }} </p>
 	      <p>Description: {{ project.description }}</p>
 	      <p>Source code path: <em>{{project.code_path}}</em></p>
 	      <p>[<a href="{% url 'browser.views.project_edit' project.id%}">Edit</a>]</p>

@@ -1,15 +1,14 @@
+import tempfile 
+import zipfile
+import tarfile 
+import unipath
+import os
+import pydot
+
 from django.http import Http404
 from django.core.urlresolvers import reverse
 
 from codebro import settings
-
-from tempfile import mkstemp
-from zipfile import ZipFile, is_zipfile
-from tarfile import TarFile, is_tarfile
-
-from os import fdopen, mkdir, unlink
-
-from pydot import Dot, Node, Edge, InvocationException
 
 
 class Archive:
@@ -18,9 +17,9 @@ class Archive:
     TBZ_FILE = 3
     
     handlers = {
-        ZIP_FILE : [ZipFile, ZipFile.close, ZipFile.extractall, 'r', is_zipfile],
-        TGZ_FILE : [TarFile.open, TarFile.close, TarFile.extractall, 'r:gz', is_tarfile],
-        TBZ_FILE : [TarFile.open, TarFile.close, TarFile.extractall, 'r:bz2', is_tarfile],
+        ZIP_FILE : [zipfile.ZipFile, zipfile.ZipFile.close, zipfile.ZipFile.extractall, 'r', zipfile.is_zipfile],
+        TGZ_FILE : [tarfile.TarFile.open, tarfile.TarFile.close, tarfile.TarFile.extractall, 'r:gz',  tarfile.is_tarfile],
+        TBZ_FILE : [tarfile.TarFile.open, tarfile.TarFile.close, tarfile.TarFile.extractall, 'r:bz2', tarfile.is_tarfile],
         }
 
     extensions = {
@@ -64,9 +63,10 @@ def is_valid_file(f):
 
 
 def extract_archive(archive_name, project_name, extension):
-    path = "%s/%s" % (settings.SRC_PATH, project_name)
     try:
-        mkdir(path, 0755)
+        path = unipath.Path( '/'.join([settings.SRC_PATH, project_name]) )
+        path.mkdir(mode=0755)
+        
     except OSError:
         unlink(archive_name)
         return None
@@ -74,14 +74,14 @@ def extract_archive(archive_name, project_name, extension):
     archive = Archive(archive_name, extension)
     archive.extract(path)
 
-    unlink(archive_name)
+    os.unlink(archive_name)
     return path
 
 
 def handle_uploaded_file(file_o, project_name, extension):
-    fd, fname = mkstemp(prefix="codebro_tmp")
+    fd, fname = tempfile.mkstemp(prefix="codebro_tmp")
 
-    with fdopen(fd, 'w') as f:
+    with os.fdopen(fd, 'w') as f:
         for chunk in file_o.chunks():
             f.write(chunk)
 
@@ -92,16 +92,6 @@ def valid_method_or_404(request, methods):
     if not request.method in methods:
         raise Http404
 
-
-def is_project_parsed(project):
-    return project.function_set.count() != 0 \
-        and project.file_set.count() != 0
-
-def is_project_xrefed(project):
-    return is_project_parsed(project) \
-        and project.xref_set.count() != 0
-
-
     
 def generate_graph(outfile, project, caller, xref, depth):
     """
@@ -109,18 +99,18 @@ def generate_graph(outfile, project, caller, xref, depth):
     """
 
     title = "Callgraph"
-    title+= "From" if xref==True else "To"
+    title+= "To" if xref==True else "From"
     title+= ": %s:%s" % (project.name, caller.name)
     
-    graph = Dot(graph_type="digraph", graph_name=title,
-                suppress_disconnected=False, simplify=False,)
+    graph = pydot.Dot(graph_type="graph", graph_name=title,
+                      suppress_disconnected=False, simplify=False,)
     
     link_node(graph, project, caller, xref, depth)
     
     try :
         graph.write_svg(outfile)
         
-    except InvocationException, ie:
+    except pydot.InvocationException, ie:
         return False
 
     return True
@@ -136,7 +126,7 @@ def link_node(graph, project, caller_f, xref_from, depth):
         else:
             depth -= 1
         
-    caller_n = Node(caller_f.name)
+    caller_n = pydot.Node(caller_f.name)
     graph.add_node(caller_n)
 
     if xref_from:
@@ -147,18 +137,17 @@ def link_node(graph, project, caller_f, xref_from, depth):
     for xref in xrefs :
         if xref_from:
             called_function = xref.called_function
-            callee_n = Node(called_function.name)
+            callee_n = pydot.Node(called_function.name)
             sub_xrefs = project.xref_set.filter(project=project, calling_function=called_function)
         else:
             called_function = xref.calling_function
-            callee_n = Node(called_function.name)
+            callee_n = pydot.Node(called_function.name)
             sub_xrefs = project.xref_set.filter(project=project, called_function=called_function)
 
         if sub_xrefs.count():
             url_to_decl = reverse('browser.views.project_detail', args=(project.id, ))
-            url_to_decl+= "?file=%s" % called_function.file.name
-            if called_function.line is not None :
-                url_to_decl+= "&hl=%d" % called_function.line
+            args = "?file=%s&hl=%d"
+            args%= (called_function.file.name, called_function.line)
             callee_n.set_URL(url_to_decl)
 
             if xref_from:
@@ -168,21 +157,21 @@ def link_node(graph, project, caller_f, xref_from, depth):
                 
         graph.add_node(callee_n)
         if xref_from :
-            edge = Edge(caller_n, callee_n)
+            edge = pydot.Edge(caller_n, callee_n)
         else:
-            edge = Edge(callee_n, caller_n)
+            edge = pydot.Edge(callee_n, caller_n)
 
         # edge label
-        lbl = xref.calling_function.file.name.replace(project.get_code_path()+'/', '')
+        lbl = xref.calling_function.file.name.replace(project.code_path+'/', '')
         lbl+= '+'
         lbl+= str(xref.called_function_line)
         edge.set_label(lbl)
 
         # edge url
         url = reverse('browser.views.project_detail', args=(project.id, ))
-        url+= "?file=%s" % xref.calling_function.file.name
-        url+= "&hl=%d" % xref.called_function_line
-        edge.set_URL(url)
+        args = "?file=%s&hl=%s"
+        args%= (xref.calling_function.file.name, xref.called_function_line)
+        edge.set_URL(url + args)
         
         edge.set_fontsize(8)
         

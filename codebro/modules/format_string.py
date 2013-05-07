@@ -1,8 +1,9 @@
-from clang.cindex import CursorKind
-from codebro.modules import Module
-from browser.models import ModuleDiagnostic
-from browser.models import Module as ModuleDB
 import re
+import clang.cindex 
+
+from modules import Module
+from analyzer.models import ModuleDiagnostic
+from analyzer.models import Module as ModuleDB
 
 
 class FormatStringModule(Module):
@@ -12,7 +13,7 @@ class FormatStringModule(Module):
     
     def __init__(self, parser):
         Module.__init__(self, parser, self.name)
-        self.hook_on = CursorKind.CALL_EXPR
+        self.hook_on = clang.cindex.CursorKind.CALL_EXPR
         
         
     def register(self):
@@ -49,7 +50,7 @@ class FormatStringModule(Module):
 
             for subref in arg_ref_node.get_children() :
 
-                if subref.kind == CursorKind.STRING_LITERAL:
+                if subref.kind == clang.cindex.CursorKind.STRING_LITERAL:
                     line = self.solve_string(subref)
                     if "%" in line :
                         number_of_args = len(unexposed_refs) - i - 1

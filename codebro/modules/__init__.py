@@ -3,15 +3,15 @@ class Module:
     def __init__(self, parser, name):
         self.parser = parser
         self.name = name
+        required_functions = ('__init__', 'run', )
         
         # check for required functions in modules
-        for required_functions in ('__init__', 'run', ):
+        for func in required_functions:
             try :
-                getattr(self, required_functions)
+                getattr(self, func)
                 
             except AttributeError:
-                print ("[-] Module %s : Missing required function %s" % (self.name,
-                                                                         required_functions))
+                print ("[-] Module %s : Missing function %s" % (self.name, func))
         
 
 

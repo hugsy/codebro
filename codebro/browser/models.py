@@ -1,143 +1,47 @@
 from django.db import models
-from django.core.exceptions import ValidationError
 
 from codebro import settings
-
-from os import path
-
-import clang.cindex
+from browser.validators import validate_IsValidName, validate_PathNotEmpty
 
 
-def validate_not_empty(value):
-    if len(value.strip()) == 0:
-        raise ValidationError(u'String must not be empty')
-
+class TimeStampedModel(models.Model):
+    """
     
-def validate_path(value):
-    abspath = path.abspath(value)
-    if not abspath.startswith(settings.SRC_PATH) or not path.isdir(abspath):
-        raise ValidationError(u'Invalid path for source code')
-
+    """
+    created			= models.DateTimeField(auto_now_add = True)
+    modified 		= models.DateTimeField(auto_now = True)
     
-def validate_project_name(value):
-    if not value.isalnum():
-        raise ValidationError(u'Project name must be alnum')
-    
+    class Meta:
+        abstract = True
+        
 
 class Language(models.Model):
-    name = models.CharField(max_length=64, validators=[validate_not_empty])
-    extension = models.CharField(max_length=10)
+    """
+
+    """
+    name 			= models.CharField(max_length=64)
+    extension 		= models.CharField(max_length=10)
     
     def __unicode__(self):
         return "%s (%s)" % (self.name, self.extension)
 
     
-class Project(models.Model):
-    name = models.CharField(max_length=64, unique=True, validators=[validate_not_empty,
-                                                                    validate_project_name])
-    description = models.TextField(max_length=255)
-    language = models.ForeignKey(Language)
-    added_date = models.DateTimeField()
-    code_path = models.TextField(max_length=64)
-    is_parsed =  models.BooleanField(default=False)
-    
-    def __unicode__(self):
-        return self.name    
+class Project(TimeStampedModel):
+    """
 
-    def get_code_path(self):
-        return path.abspath(settings.SRC_PATH + "/" + self.code_path)
-
-    
-class File(models.Model):
-    name = models.CharField(max_length=1024, validators=[validate_not_empty])
-    project = models.ForeignKey(Project)
-
-    def __unicode__(self):
-        return self.name
-    
-
-class Function(models.Model):
-    name = models.CharField(max_length=1024, validators=[validate_not_empty])
-    project = models.ForeignKey(Project)
-    file = models.ForeignKey(File, null=True)
-    line = models.PositiveIntegerField(null=True, default=0)
-    rtype = models.CharField(max_length=16, null=True)
-    
-    def __unicode__(self):
-        return "%s:%d - <%s> %s (%s)" % (self.file, self.line if self.line is not None else 0, self.rtype,
-                                         self.name, self.get_arguments())
-    
-    def get_arguments(self):
-        args = self.argument_set.iterator()
-        return ', '.join([x.__unicode__() for x in args])
-
-    
-class Argument(models.Model):
-    name = models.CharField(max_length=32)
-    type = models.CharField(max_length=16)
-    function = models.ForeignKey(Function)
-    
-    def __unicode__(self):
-        return "<%s> %s" % (self.name, self.type)
-
-    
-class Xref(models.Model):
-    project = models.ForeignKey(Project)
-    calling_function = models.ForeignKey(Function, related_name='caller')
-    called_function = models.ForeignKey(Function, related_name='callee')
-    called_function_line = models.PositiveIntegerField()
-    
-    def __unicode__(self):
-        return "%s -> %s (l.%d)" % (self.calling_function.name,
-                                    self.called_function.name,
-                                    self.called_function_line if self.called_function_line is not None else 0)
-
-
-class Diagnostic(models.Model):
-    
-    filepath = models.CharField(max_length=1024)
-    line = models.PositiveIntegerField()
-    message = models.TextField()
-
-    class Meta:
-        abstract = True
+    """
+    name 			= models.CharField(max_length = 64,
+                                       unique = True,
+                                       validators = [validate_IsValidName])
+    description 	= models.TextField(max_length = 256)
+    language 		= models.ForeignKey(Language)
+    source_path		= models.TextField(max_length = 256)
+    is_parsed 		= models.BooleanField(default = False)
         
+    @property
+    def code_path(self):
+        return settings.SRC_PATH + "/" + self.source_path
 
-class Debug(Diagnostic):
-    DIAG_LEVELS = (
-        (clang.cindex.Diagnostic.Ignored,  "IGNORED"),
-        (clang.cindex.Diagnostic.Note,     "NOTE"),
-        (clang.cindex.Diagnostic.Warning,  "WARNING"),
-        (clang.cindex.Diagnostic.Error,    "ERROR"),
-        (clang.cindex.Diagnostic.Fatal,    "FATAL"),
-        )
-
-    category = models.PositiveIntegerField(choices=DIAG_LEVELS,
-                                           default=clang.cindex.Diagnostic.Note)
-    project = models.ForeignKey(Project)
-    
-    @staticmethod
-    def level2str(level):
-        for i, s in Debug.DIAG_LEVELS:
-            if i == level:
-                return s
-        return ""
-
-    
     def __unicode__(self):
-        return "[%d] %s:%s - %s" % (self.category, self.project.name,
-                                    self.filepath, self.message)
+        return "%s (%s) : %s" % (self.name, self.language.name, self.code_path)
 
-
-class Module(models.Model):
-    # uid  = models.PositiveIntegerField()
-    name = models.CharField(max_length=64)
-    project = models.ForeignKey(Project)
-    
-
-class ModuleDiagnostic(Diagnostic):
-    module = models.ForeignKey(Module)
-    
-    def __unicode__(self):
-        return "[%d] %s:%s - %s" % (self.name, self.module.project.name,
-                                    self.filepath, self.message)

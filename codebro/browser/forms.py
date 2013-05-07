@@ -13,11 +13,7 @@ class ProjectForm(ModelForm):
     
     class Meta:
         model = Project
-        
-        exclude = ("added_date",
-                   "code_path",
-                   "is_parsed"
-                   )
+        exclude = ("source_path", "is_parsed")
         
         widgets = {
             "description": Textarea(attrs={"rows": 3}),

@@ -1,12 +1,12 @@
+from os import access, R_OK, walk, path, listdir
+
 from clang.cindex import CursorKind
 from clang.cindex import Index
 from clang.cindex import TypeKind
 
 from codebro import settings
-from codebro.modules.format_string import FormatStringModule
-from browser.models import Debug
-
-from os import access, R_OK, walk, path, listdir
+from modules.format_string import FormatStringModule
+from .models import Debug
 
 
 class ClangParser:
@@ -19,7 +19,7 @@ class ClangParser:
         
         """
         self.project = project
-        self.root_dir = self.project.get_code_path()
+        self.root_dir = self.project.code_path
         self.index = Index.create()
         self.parser = None
         

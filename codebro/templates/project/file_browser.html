@@ -27,8 +27,6 @@ function function_menu(id, urls) {
 }
 
 
-
-
 $(document).ready(function() {
 $("#canvas_code").click(function () {
     $(this).unhighlight();
@@ -36,7 +34,7 @@ $("#canvas_code").click(function () {
 
   $("#canvas_code").dblclick(function () {
     var word = window.getSelection();
-alert( $(this).name);
+    alert( $(this).name);
     $(this).highlight(word);
   });
 
@@ -61,7 +59,7 @@ alert( $(this).name);
 
 <p> <i class="icon-circle-arrow-up"></i> [<a href="{%url 'browser.views.project_detail' project.id%}?file={{parent_dir}}/">Browse directory</a>] </p>
 
-{# for files, output has been sanitized by pygments #}
+<p> [<a href="">Parse this file</a>] </p>
 
 {% autoescape off %}
 {% for line in lines %}{{ line }}

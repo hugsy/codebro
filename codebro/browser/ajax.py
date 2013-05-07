@@ -1,6 +1,7 @@
 import json
 import hashlib
 import xml.sax
+import os
 
 from django.core import serializers
 from django.core.urlresolvers import reverse
@@ -11,9 +12,8 @@ from dajaxice.decorators import dajaxice_register
 from dajaxice.exceptions import DajaxiceError
 
 from codebro import settings
-from analyzer.analyzer import clang_parse_project, clang_xref_project
-from browser.models import Project, Function, Xref, ModuleDiagnostic
-from browser.helpers import is_project_parsed, is_project_xrefed
+from analyzer.analysis import clang_parse_project, clang_xref_project
+from analyzer.models import Project, Function, Xref, ModuleDiagnostic
 from browser.helpers import valid_method_or_404
 from browser.helpers import generate_graph
 
@@ -128,7 +128,7 @@ def ajax_add_funcgraph_link(request, f, d, x):
         
          project = caller_f.project
          
-         if not is_project_xrefed(project):
+         if not project.is_parsed:
              return dajax.json()
          
     except xml.sax.SAXParseException:
@@ -140,7 +140,7 @@ def ajax_add_funcgraph_link(request, f, d, x):
     base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
     base+= "@%d" % depth  if depth > 0 else 0
 
-    basename = hashlib.sha1(base).hexdigest() + ".svg"
+    basename = hashlib.sha256(base).hexdigest() + ".svg"
     pic_name = settings.CACHE_PATH + "/" + basename
 
     if not os.access(pic_name, os.R_OK):

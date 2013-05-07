@@ -6,8 +6,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 from pygments.formatters.html import _escape_html_table
 
-from browser.helpers import is_project_xrefed
-from browser.models import File
+from .models import File
 
 
 class CodeBroHtmlFormatter(HtmlFormatter):
@@ -21,7 +20,7 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         """
         HtmlFormatter.__init__(self, **options)
         self.project = options['codebro_project']
-        self.is_xrefed = is_project_xrefed(self.project)
+        self.is_xrefed = self.project.is_parsed
         self.file = None
         self.functions = []
         self.func_idx = 0

@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "dajaxice",
     "browser",
+    "analyzer",
 )
 
 LOGGING = {

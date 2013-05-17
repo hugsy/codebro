@@ -28,14 +28,13 @@ function function_menu(id, urls) {
 
 
 $(document).ready(function() {
-$("#canvas_code").click(function () {
-    $(this).unhighlight();
-});
+  $("#canvas_code").click(function () {
+    $("#canvas_code").unhighlight();
+  });
 
   $("#canvas_code").dblclick(function () {
-    var word = window.getSelection();
-    alert( $(this).name);
-    $(this).highlight(word);
+    var sel = window.getSelection();
+    $("#canvas_code").highlight(sel.toString());
   });
 
 });
@@ -43,8 +42,6 @@ $("#canvas_code").click(function () {
 </script>
 
 <!-- file content canvas -->
-<div id="canvas_code">
-
 <p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
 {% if is_dir %}
 <pre class="prettyprint linenums"><ol>{% for line in lines %}<li><a href="?file={{ path }}/{{ line }}">{{ line }}</a></li>{% endfor %}</ol></pre>
@@ -61,15 +58,18 @@ $("#canvas_code").click(function () {
 
 <p> [<a href="">Parse this file</a>] </p>
 
+<div id="canvas_code">
 {% autoescape off %}
 {% for line in lines %}{{ line }}
 {% endfor %}
 {% endautoescape %}
+</div>
 
 {% endif %}
+
 
 <div id="function_menu" style="zIndex:1; visibility: hidden; background-color: white; width: 300px; border:
      1px solid black;"></div>
 
-</div>
+
 <!-- end of canvas -->

@@ -1,51 +1,7 @@
-<script type="text/javascript">
-  
-function generate_menu(urls) {
-  var menu = '<p><a href="'+urls[0]+'&xref=0">Draw graph from this function</a></p>';
-  menu += '<p><a href="'+urls[0]+'&xref=1">Draw graph to this function</a></p>';
-
-  if (urls[1].length > 0) {
-    menu += '<p><a href="'+urls[1]+'">Jump to declaration</a></p>';
-  }
-
-  return menu;
-}
-
-function function_menu(id, urls) {
-  var off = $('#'+id).offset();
-  var d = $('#function_menu');
-
-  if(d[0].style.visibility == 'visible') {
-    d[0].style.visibility = 'hidden';
-    return;
-  }
-
-  d[0].style.visibility = 'visible';
-  d.offset( {top: off.top + 20, left: off.left } );
-
-  d[0].innerHTML = generate_menu(urls);
-}
-
-
-$(document).ready(function() {
-  $("#canvas_code").click(function () {
-    $("#canvas_code").unhighlight();
-  });
-
-  $("#canvas_code").dblclick(function () {
-    var sel = window.getSelection();
-    $("#canvas_code").highlight(sel.toString());
-  });
-
-});
-
-</script>
+<script src="{{ STATIC_URL }}js/file_browser.js"></script>
 
 <!-- file content canvas -->
 <p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
-{% if is_dir %}
-<pre class="prettyprint linenums"><ol>{% for line in lines %}<li><a href="?file={{ path }}/{{ line }}">{{ line }}</a></li>{% endfor %}</ol></pre>
-{% else %}
 
 {% if jump_to > 0 %}
 <script>
@@ -56,7 +12,7 @@ $(document).ready(function() {
 
 <p> <i class="icon-circle-arrow-up"></i> [<a href="{%url 'browser.views.project_detail' project.id%}?file={{parent_dir}}/">Browse directory</a>] </p>
 
-<p> [<a href="">Parse this file</a>] </p>
+<p> [<a href="#">Parse this file</a>] </p>
 
 <div id="canvas_code">
 {% autoescape off %}
@@ -65,11 +21,7 @@ $(document).ready(function() {
 {% endautoescape %}
 </div>
 
-{% endif %}
-
-
 <div id="function_menu" style="zIndex:1; visibility: hidden; background-color: white; width: 300px; border:
      1px solid black;"></div>
-
 
 <!-- end of canvas -->

@@ -18,10 +18,10 @@
   
   <body>
     <script src="http://code.jquery.com/jquery-latest.js"></script>
-    <script src="http://raw.github.com/hugsy/sandbox.js/master/jquery.highlight.js"></script>
     <script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
     <script src="{{ STATIC_URL }}js/bootbox.min.js"></script>
     <script src="{{ STATIC_URL }}js/jquery.dajax.core.js"></script>
+	<script src="{{ STATIC_URL }}js/jquery.highlight.js"></script>
     {% dajaxice_js_import %}
     
     <!-- header panel -->
@@ -72,25 +72,42 @@
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="{% url 'browser.views.index' %}">Home</a></li>
-              <li><a href="{% url 'browser.views.list' %}">List Projects</a></li>
+              <li><a href="{% url 'browser.views.project_list' %}">List Projects</a></li>
 	      <li><a href="{% url 'browser.views.project_new' %}">Add a Project</a></li>
               <li><a href="{% url 'about' %}">About</a></li>
             </ul>
 
-	    {% if project %}
-	    <form class="navbar-form pull-right" action="{% url 'browser.views.project_search' project.id %}" method="POST">
-	      <input type="text" name="pattern" class="input-medium search-query" placeholder="Search in {{project.name}}"/>
-              <button type="submit" class="btn">Go</button>
-	      {% csrf_token %}
-            </form>
+			{% if project %}
+			<form class="navbar-form pull-right" action="{% url 'browser.views.project_search' project.id %}" method="GET">
+			  <input type="text" name="q" class="input-small search-query" placeholder="Search in {{project.name}}"/>
+			  <button type="submit" class="btn">Search</button>
+			</form>
+
+			<script type="text/javascript">
+			  function IsInt(n) { return n % 1 === 0; }
+			  
+			  function JumpToLine() {
+			   var line = document.getElementById('linenum').value;
+			   if (IsInt(line)) {
+			    var block = document.getElementsByName('line-'+line);
+			    if (block.length > 0)
+			     window.location = '#line-'+line;
+			   }
+			   return false;
+			  }
+			</script>
+			
+			<div class="navbar-form pull-right">
+			  <input type="text" size="10" id="linenum" class="input-small" placeholder="Jump to line"/>
+			  <button type="submit" onclick="JumpToLine();" class="btn">Jump</button>
+			</div>
 
 	    {% else %}
 
-	    <form class="navbar-form pull-right" action="{% url 'browser.views.search' %}" method="POST">
-	      <input type="text" name="pattern" class="input-medium search-query" placeholder="Search"/>
-              <button type="submit" class="btn">Go</button>
-	      {% csrf_token %}
-            </form>
+	    <form class="navbar-form pull-right" action="{% url 'browser.views.generic_search' %}" method="GET">
+	      <input type="text" name="q" class="input-small search-query" placeholder="Search"/>
+          <button type="submit" class="btn">Go</button>
+        </form>
 	    {% endif %}
 	    
 	  </div>

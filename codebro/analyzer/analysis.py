@@ -1,78 +1,111 @@
-
 from django.contrib import messages
+from django.db import transaction
 
 from codebro import settings
 from .clangparse import ClangParser
-from .models import File, Function, Argument, Xref, Debug
+from .models import Function, Argument, Xref, Debug
 
 
-def clang_parse_project(r, p):
+def clang_parse_project(request, project):
     """
-    
+    wrapper, used to start xref process
     """
-
-    clang_xref_project(r, p)
-    p.is_parsed = True
-    p.save()
-    messages.info(r, "Successfully parsed")  
+    generate_project_xref(request, project)
+    project.is_parsed = True
+    project.save()
+    messages.info(request, "Successfully parsed")  
     return True
 
 
-def clang_xref_project(r, p):
-    """
-    
-    """
-    cparser = ClangParser(p)
-    
-    for cur_file in ClangParser.enumerate_files(cparser.root_dir, [p.language.extension,]) :
+def add_function_declaration(project, file, data):
+    funcname, filename, line, rtype, args = data
+    func, created = Function.objects.get_or_create(name = funcname,
+                                                   file = file,
+                                                   project = project)
 
-        f, c = File.objects.get_or_create(name = cur_file, project = p)
-        if c :
-            f.save()
-            
-        for out in cparser.get_xref_calls(f.name):
-            if len(out) == 5:
-                # FUNC_DECL
-                funcname, filename, line, rtype, args = out
-                func, created = Function.objects.get_or_create(name = funcname,
-                                                               file = f,
-                                                               project = p)
-
-                func.line  = line
-                func.rtype = rtype
-                func.save()
+    func.line  = line
+    func.rtype = rtype
+    func.save()
         
-                if created:
-                    args_o = []
-                    for cur_arg_name, cur_arg_type in args:
-                        arg = Argument()
-                        arg.name, arg.type = (cur_arg_name, cur_arg_type)
-                        arg.function = func
+    if created:
+        args_o = []
+        
+        for cur_arg_name, cur_arg_type in args:
+            arg = Argument()
+            arg.name, arg.type = (cur_arg_name, cur_arg_type)
+            arg.function = func
 
-                    for arg_o in args_o: arg_o.save()
+        for arg_o in args_o:
+                arg_o.save()
 
-                # if settings.DEBUG :
-                    # print func.file.name, func.name, func.line, args
-                    
+    if settings.DEBUG :
+        print func.file.name, func.name, func.line, args
+
+    return
+
+
+def add_function_call(project, file, data):
+    (caller, infos) = data
+    caller, created = Function.objects.get_or_create(name = caller,
+                                                     file = file,
+                                                     project = project)
+
+    callee, created = Function.objects.get_or_create(name = infos["name"],
+                                                     file = file,
+                                                     project = project)
+
+    xref = Xref()
+    xref.project = project
+    xref.calling_function = caller
+    xref.called_function = callee
+    xref.called_function_line = infos['line']
+
+    xref.save()
+
+    if settings.DEBUG :
+        print xref.calling_function.name, 'calls', xref.called_function.name, 'line', xref.called_function_line, 'in', xref.calling_function.file.name
+    
+    return
+
+
+@transaction.commit_manually
+def generate_file_xref(project, file, cparser=None):
+    if file.is_parsed:
+        return
+
+    if cparser is None :
+        cparser = ClangParser(project)
+
+    try: 
+        for out in cparser.get_xref_calls(file.name):
+            if len(out) == 5:  # FUNC_DECL
+                add_function_declaration(project, file, out)
             
-            if len(out) == 2:
-                # CALL_EXPR
-                (caller, infos) = out
-                caller, created = Function.objects.get_or_create(name=caller, file=f, project=p)
-                callee, created = Function.objects.get_or_create(name=infos['name'], file=f, project=p)
+            elif len(out) == 2:  # CALL_EXPR
+                add_function_call(project, file, out)
 
-                xref = Xref()
-                xref.project = p
-                xref.calling_function = caller
-                xref.called_function = callee
-                xref.called_function_line = infos['line']
+        file.is_parsed = True
+        file.save()
+        
+    except Exception, e:
+        if settings.DEBUG:
+            print "An exception occured", e
+        transaction.rollback()
+            
+    else:
+        transaction.commit()
+    
+    return
+    
 
-                xref.save()
-
-                # if settings.DEBUG :
-                    # print xref.calling_function.name, 'calls', xref.called_function.name, 'line', xref.called_function_line, 'in', f.name
-
-
+def generate_project_xref(request, project):
+    """
+    generate call xrefs in the project (i.e. on all files), and store them in database
+    """
+    cparser = ClangParser(project)
+    
+    for file in project.file_set.all():
+        generate_file_xref(project, file, cparser)
     
     for cat, fil, lin, error_msg in cparser.diags:
         dbg = Debug()
@@ -80,14 +113,14 @@ def clang_xref_project(r, p):
         dbg.filepath = fil
         dbg.line = lin
         dbg.message = error_msg
-        dbg.project = p
+        dbg.project = project
         dbg.save()
         
     
-    if p.xref_set.count() :
-        messages.success(r, "Successfully xref-ed")
+    if project.xref_set.count() :
+        messages.success(request, "Successfully xref-ed")
         return True
     
     else :
-        messages.error(r, "No xref have been established")
+        messages.error(request, "No xref have been established")
         return False

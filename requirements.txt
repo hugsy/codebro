@@ -1,7 +1,9 @@
 Django>=1.5
 django-dajax>=0.9.2
 django-dajaxice>=0.5.5
+djangorestframework>=2.3
 pyparsing==1.5.7
 pydot==1.0.28
 Pygments==1.6
 Unipath==1.0
+pygraphviz>=1.1

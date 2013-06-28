@@ -13,7 +13,7 @@
 {% for project, block in blocks.items %}
 <div class="hero-unit">
   {% for file, data in block.items %}
-  <h5>{{ file.name }} in <em>{{ project.name }}</em></h5>
+  <h5>File {{ file.relative_name }} in <em>{{ project.name }}</em></h5>
   {% for line, match in data.items %}
   <p><pre class="prettyprint">
       <a href="{% url 'browser.views.project_detail' project.id%}?file={{ file.name }}&hl={{ line }}">{{ line }} : {{ match }}</a></pre> </p>

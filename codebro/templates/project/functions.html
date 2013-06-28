@@ -27,10 +27,10 @@
     <table class="table table-hover">
       <thead>
 	<tr>
-	  <td>Name</td>
-	  <td>File</td>
-	  <td>Line</td>
-	  <td>Link</td>
+	  <th>Name</th>
+	  <th>File</th>
+	  <th>Declared line</th>
+	  <th>Link</th>
 	</tr>
       </thead>
       
@@ -38,7 +38,7 @@
 	{% for function in functions %}
 	<tr>
 	  <td>{{function.name}}</td>
-	  <td>{{function.file.name}}</td>
+	  <td>{{function.file.relative_name}}</td>
 	  <td>{{function.line}}</td>
 	  <td><a href="{% url 'browser.views.project_detail' project.id %}?file={{function.file.name}}#line-{{function.line}}">here</a></td>
 	</tr>

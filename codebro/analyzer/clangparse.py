@@ -1,12 +1,14 @@
-from os import access, R_OK, walk, path, listdir
+import unipath
+
+from os import access, R_OK, walk, path
 
 from clang.cindex import CursorKind
 from clang.cindex import Index
-from clang.cindex import TypeKind
+# from clang.cindex import TypeKind
 
 from codebro import settings
 from modules.format_string import FormatStringModule
-from .models import Debug
+
 
 
 class ClangParser:
@@ -19,7 +21,7 @@ class ClangParser:
         
         """
         self.project = project
-        self.root_dir = self.project.code_path
+        self.root_dir = unipath.Path(self.project.code_path)
         self.index = Index.create()
         self.parser = None
         
@@ -56,18 +58,12 @@ class ClangParser:
             
     def include_sub_dirs(self):
         """
-        
+        append subdirs to clang include options
         """
-        subdirs = []
-        for root, dirs, files in walk(self.root_dir, topdown=True, followlinks=False):
-            for d in dirs :
-                fullpath = fpath = path.join(root, d)
-                if path.isdir(fullpath):
-                    subdirs.append("-I" + fullpath)           
+        subdirs = [ "-I"+ p.absolute() for p in self.root_dir.walk(filter=unipath.DIRS_NO_LINKS)]
         return subdirs
 
     
-    @staticmethod
     def enumerate_files(root_dir, extensions):
         """
         
@@ -128,7 +124,9 @@ class ClangParser:
         """
         
         """
-        print ("Parsing '%s' with args : %s" % (filename, self.clang_args))
+        # if settings.DEBUG:
+            # print ("Parsing '%s' with args : %s" % (filename, self.clang_args))
+            
         self.parser = self.index.parse(filename, args=self.clang_args)
 
         if self.parser:
@@ -136,13 +134,13 @@ class ClangParser:
                 for d in self.parser.diagnostics:
                     cat, loc, msg = d.category_number, d.location, d.spelling
                     if loc is None  :
-                        fil, lin = "Unknown", 0
+                        file, line = "Unknown", 0
                     elif loc.file is None :
-                        fil, lin = "Unknown", loc.line
+                        file, line = "Unknown", loc.line
                     else :
-                        fil, lin = loc.file.name, loc.line
+                        file, line = loc.file.name, loc.line
                         
-                    self.diags.append((cat, fil, lin, msg))
+                    self.diags.append((cat, file, line, msg))
             
             for node in self.inspect(self.parser.cursor, "<OutOfScope>"):
                 yield node

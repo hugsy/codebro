@@ -4,32 +4,7 @@
 
 {% block content %}
 
-
-<script type="text/javascript">
-  
-  function disable(tag) {
-    $('#btn_'+tag)[0].disabled = 'Disabled';
-    $('#btn_'+tag)[0].value = 'Please Wait...';  
-  }
-  
-  function dajax_init(tag, func, pid) {
-    disable(tag);
-    func(dajax_callback, {'project_id': pid});
-    //setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
-  }
-  
-  function dajax_callback(data) {
-    bootbox.alert(data.message);
-    if(data.status != 0) {
-      $('#btn_parse')[0].removeAttribute('disabled');
-      $('#btn_parse')[0].value = 'Retry';
-    } else {
-      setTimeout( function(){location.reload();}, 3000);
-    }
-  }
-  
-</script>
-
+<script src="{{ STATIC_URL }}js/ajax_analyse.js"></script>
 
 <div class="row">
   <div class="span12">
@@ -75,11 +50,11 @@
 	      [<a href="{% url 'browser.views.project_analysis' project.id %}">Analysis module</a>]
 	      <br/>
 
-	      <input id="btn_parse"
-		     type="button"
-		     class="btn btn-mini btn-primary"
-		     onclick="dajax_init('unparse', Dajaxice.browser.ajax_project_unparse, {{project.id}});" 
-		     value="Delete">
+	      <input id="btn_unparse"
+				 type="button"
+				 class="btn btn-mini btn-primary"
+				 onclick="dajax_init('unparse', Dajaxice.browser.ajax_project_unparse, {{project.id}});" 
+				 value="Delete">
 	      
 	      {% elif project.xref_set.count != 0 and project.file_set.count != 0 %}	      
 	      <i class="icon-remove"></i> Not Parsed
@@ -116,9 +91,11 @@
 	  <div id="explore" class="accordion-body collapse in">
 	    <div class="accordion-inner">
 	      <div id="explorer">
-		
+{% if is_dir %}
+{% include "project/dir_browser.html"%}
+{% else %}
 {% include "project/file_browser.html"%}
-
+{% endif %}
 	      </div>
 	    </div>
 	  </div>

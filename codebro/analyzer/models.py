@@ -1,9 +1,11 @@
 import clang.cindex
+import re
 
 from django.db import models
 
 from browser.validators import validate_PathNotEmpty
 from browser.models import Project
+from codebro.settings import SRC_PATH
 
 
 class File(models.Model):
@@ -13,10 +15,69 @@ class File(models.Model):
     name		 	= models.CharField(max_length = 1024,
                                        validators = [validate_PathNotEmpty])
     project 		= models.ForeignKey(Project)
-
+    is_parsed		= models.BooleanField(default = False)
+    
+    
     def __unicode__(self):
         return self.name
+
+    @property
+    def relative_name(self):
+        return self.name.replace(SRC_PATH+"/", "")
     
+    def grep(self, pattern):
+        """
+        shitty under-optimized grep function : search a pattern inside a file
+        """
+        blocks = []
+
+        with open(self.name, 'r') as fd :
+        
+            line_num = 1
+            for line in fd.xreadlines():
+                match = pattern.search(line)
+                if match is not None:
+                    blocks.append([line_num, match.string])
+                line_num += 1
+
+        return blocks
+
+    
+    @staticmethod
+    def search(pattern, files, project=None):
+        """
+        search engine
+        """
+
+        blocks = {}
+        compiled_pattern = re.compile(pattern, re.IGNORECASE)
+        
+        for file in files :
+            ret = file.grep(compiled_pattern)
+            if len(ret) > 0:
+                if file.project not in blocks:
+                    blocks[file.project] = {}
+                    
+                if file not in blocks[file.project]:
+                    blocks[file.project][file] = {}
+                blocks[file.project][file].update(ret) 
+
+        total = 0
+    
+        for project in blocks.keys():
+            for e in blocks[project].keys():
+                total += len(blocks[project][e])
+            
+        ctx = {}
+        ctx["pattern"] = pattern
+        ctx["num_matches"] = total
+        ctx["blocks"] = blocks
+
+        if project is not None:
+            ctx['project'] = project
+        
+        return ctx
+
 
 class Function(models.Model):
     """
@@ -115,7 +176,6 @@ class Module(models.Model):
     """
 
     """
-    # uid  		= models.PositiveIntegerField()
     name 		= models.CharField(max_length=64)
     project 	= models.ForeignKey(Project)
     

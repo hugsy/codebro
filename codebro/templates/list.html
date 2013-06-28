@@ -36,8 +36,7 @@
 	  <th>Language</th>
 	  <th>Created date</th>
 	  <th>Modified date</th>
-	  <th>Parsed?</th>	  
-	  <th>XRefed?</th>
+	  <th>Nb function analyzed</th>	  
 	  <th>Link</th>
 	</tr>
       </thead>
@@ -45,28 +44,19 @@
     {% for project in projects %}
       
       <tr>
-	<td>{{ project.id }}</td>
-	<td>{{ project.name }}</td>
-	<td>{{ project.description }}</td>
-	<td>{{ project.language }}</td>
-	<td>{{ project.created }}</td>
-	<td>{{ project.modified }}</td>
+		<td>{{ project.id }}</td>
+		<td>{{ project.name }}</td>
+		<td>{{ project.description }}</td>
+		<td>{{ project.language }}</td>
+		<td>{{ project.created }}</td>
+		<td>{{ project.modified }}</td>
 
-	<td>
-	{% if project.function_set.count > 0 %}
-	<i class="icon-thumbs-up">
-	{% else %}
-	<i class="icon-thumbs-down">
-	{% endif %}
-	</td>
-
-	<td>
-	{% if project.xref_set.count > 0 %}
-	<i class="icon-thumbs-up">
-	{% else %}
-	<i class="icon-thumbs-down">
-	{% endif %}
-	</td>
+		<td>{{ project.function_set.count }} </td>
+		  <!-- {% if project.function_set.count > 0 %} -->
+		  <!-- <i class="icon-thumbs-up"/> -->
+		  <!-- {% else %} -->
+		  <!-- <i class="icon-thumbs-down"/> -->
+		  <!-- {% endif %} -->
 
 	<td>	  
 	  <a href="{% url 'browser.views.project_detail' project.id %}">Explore

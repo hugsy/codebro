@@ -1,5 +1,6 @@
 from os import listdir, access, R_OK, unlink, rmdir
 from os.path import abspath, isfile, isdir, islink, join
+import unipath
 import hashlib 
 import re
 
@@ -19,12 +20,11 @@ from browser.models import Project, Language
 from analyzer.models import File, Function, Argument, Xref, Debug
 from browser.helpers import valid_method_or_404
 from browser.helpers import handle_uploaded_file
-from browser.helpers import is_valid_file
+from browser.helpers import is_valid_file, is_int, get_file_extension
 from browser.helpers import generate_graph
 from browser.forms import NewProjectForm, ProjectForm
 
 from codebro import settings
-from analyzer.renderer import CodeBroRenderer
 
 
 
@@ -36,74 +36,32 @@ def index(request):
     return render(request, 'index.html', ctx)
 
 
-
-def grep(pattern, filename):
-    """
-    shitty under-optimized grep function
-    """
-    blocks = []
-
-    with open(filename, 'r') as f :
-        
-        line_num = 1
-        for line in f.xreadlines():
-            match = pattern.search(line)
-            if match is not None:
-                blocks.append([line_num, match.string])
-            line_num += 1
-
-
-    return blocks
-            
-
-def search_files(request, files, project=None):
-    """
-    search engine
-    """
-
-    valid_method_or_404(request, ["POST"])
-    
-    if "pattern" in request.POST:
-        blocks = {}
-        pat = re.compile(request.POST["pattern"], re.IGNORECASE)
-        
-        for f in files :
-            ret = grep(pat, f.name)
-            if len(ret) > 0:
-                if f.project not in blocks:
-                    blocks[f.project] = {}
-                if f not in blocks[f.project]:
-                    blocks[f.project][f] = {}
-                blocks[f.project][f].update(ret) 
-
-        total = 0
-        for p in blocks.keys():
-            for e in blocks[p].keys():
-                total += len(blocks[p][e])
-            
-        ctx = {'pattern': request.POST["pattern"],
-               'num_matches' : total,
-               'blocks': blocks}
-
-        if project:
-            ctx['project'] = project
-    else:
-        ctx = {'pattern': ""}
-        
-    return render(request, "search.html", ctx)
-
-
 def project_search(request, project_id):
-    p = get_object_or_404(Project, pk=project_id)
-    f = File.objects.filter(project=p)
-    return search_files(request, f, p)
+    """
+    perform search inside a specific project
+    """
+    project = get_object_or_404(Project, pk=project_id)
+    filelist = File.objects.filter(project=project)    
+    return generic_search(request, filelist)
 
 
-def search(request):
-    return search_files(request, File.objects.all())
+def generic_search(request, filelist=None):
+    """
+    perform a search in all files
+    """
+    valid_method_or_404(request, ["GET"])
+    if "q" not in request.GET:
+        return render(request, "search.html", {"pattern": ""})
+
+    pattern = request.GET["q"]
+    if filelist is None:
+        filelist = File.objects.all()
+    context = File.search(pattern, filelist)
+    
+    return render(request, "search.html", context)
 
 
-def list(request):
+def project_list(request):
     """
     enumerates all projects
     """
@@ -129,60 +87,36 @@ def project_detail(request, project_id):
     """
     show all details for a given project
     """
-    data = []
-    hl = []
+    content = []
+    ctx = {}
     
-    p = get_object_or_404(Project, pk=project_id)
-    cur_file = request.GET.get('file', p.code_path)
-    cur_file = abspath(cur_file)
+    project = get_object_or_404(Project, pk=project_id)
+    path = unipath.Path(request.GET.get('file', project.code_path)).absolute()
 
-    parent_dir = abspath(cur_file + "/..")
-    
-    if not cur_file.startswith(p.code_path):
+    if not path.startswith(project.code_path):
         messages.error(request, "Invalid path")
 
-    elif islink(cur_file):
+    elif path.islink():
         messages.error(request, "Cannot browse symlink")
         
-    elif isdir(cur_file):
-        data = [ "..", ]
-        dirs = []
-        files= []
-        
-        for x in listdir(cur_file):
-            if isdir(cur_file+'/'+x):
-                dirs.append(x+'/')
-                
-            elif isfile(cur_file+'/'+x):
-                files.append(x)
+    elif path.isdir():
+         content = project.list_directory(path)
 
-        dirs.sort()
-        files.sort()
-
-        data+= dirs
-        data+= files
-
-        
-    else :
-
-        for x in request.GET.get('hl', '').split(",") :
-            try : hl.append( int(x) )
-            except ValueError : pass
-            
+    elif path.isfile() :
+        hl = [ int(i)  for i in request.GET.get('hl', '').split(",") if is_int(i) ]
         hl.sort()
+        content = project.browse_file(path, hl)
+        if len(hl) > 0:
+            ctx['jump_to'] 	= hl[0]
+            
+    else :
+        messages.error(request, "Inexistant path")
         
-        r = CodeBroRenderer(p, hl)
-        data = r.render(cur_file)
-        
-    ctx = {}
-    ctx['project'] 		= p
-    ctx['path'] 		= cur_file
-    ctx['lines'] 		= data
-    ctx['is_dir']	  	= isdir(cur_file)
-    ctx['parent_dir'] 	= parent_dir
-    
-    if len(hl) > 0:
-        ctx['jump_to'] 	= hl[0]
+    ctx['project'] 		= project
+    ctx['path'] 		= path
+    ctx['lines'] 		= content
+    ctx['is_dir']	  	= path.isdir()
+    ctx['parent_dir'] 	= path.parent
     
     return render(request, 'project/detail.html', ctx)
 
@@ -198,46 +132,36 @@ def project_new(request):
         form = NewProjectForm(request.POST, request.FILES)
         
         if form.is_valid():
-            if 'file' not in request.FILES:
-                ext = False
-            else:
-                ext = is_valid_file(request.FILES['file'])
-            if ext != False:
-                if handle_uploaded_file(request.FILES['file'],
-                                        form.cleaned_data['name'],
-                                        ext) is not None :
-                    return project_add(request, form)
+            if 'file' in request.FILES:
+                file = request.FILES['file']
+                 
+                if is_valid_file(file):
+                    ext = get_file_extension(file.name)
+                    if handle_uploaded_file(file, form.cleaned_data['name'], ext) is not None :
+                        form.cleaned_data['source_path'] = form.cleaned_data['name']
+                        project = Project.create(form.cleaned_data)
+                        if project:
+                            messages.success(request, "Successfully added")
+                            return redirect(reverse('browser.views.project_detail', args=(project.id, )))
+                        else:
+                            form.errors['project']= ["Failed to create project"]
                 else :
-                    form.errors['file']= ["Error while handling uploaded file"]
+                    form.errors['extension']= ["File extension is invalid"]
             else :
-                form.errors['file'] = ["File is not valid"]
+                form.errors['file']= ["Error while handling uploaded file"]
+        else :
+            form.errors['file'] = ["File is not valid"]
             
         msg = "Invalid form: "
-        msg+= ','.join(["%s: %s"%(k,v[0]) for k,v in form.errors.iteritems()])
+        msg+= ", ".join(["'%s': %s"%(k,v[0]) for k,v in form.errors.iteritems()])
         messages.error(request, msg)
+        
         return render(request, 'project/new.html', {'form': form, 'project_id': -1})
 
     else : # request.method == 'GET' 
         form = NewProjectForm()
         return render(request, 'project/new.html', {'form': form, 'project_id': -1})
 
-    
-def project_add(request, form):
-    """
-    create and commit a new project (assume all checks were done before)
-    """
-
-    p = Project()
-    p.name = form.cleaned_data['name']
-    p.description = form.cleaned_data['description'] 
-    p.language = form.cleaned_data['language']
-    p.source_path = p.name
-    p.full_clean()
-    p.save()
-        
-    messages.success(request, "Successfully added")
-    return redirect(reverse('browser.views.project_detail', args=(p.id, )))
-   
 
 def project_edit(request, project_id):
     """
@@ -273,26 +197,18 @@ def project_delete(request, project_id):
     delete a project
     """
     
-    def rm(d):
-        """ delete recursively"""
-        for p in [join(d, f) for f in listdir(d)]:
-            if isdir(p): rm(p)
-            else: unlink(p)
-        rmdir(d)
-
     project = get_object_or_404(Project, pk=project_id)
-    name = project.name
-    fullpath = project.code_path
 
     if project.is_parsed:
-        messages.error(request, "Project '%s' must be unparsed & unxrefed first" % name)
+        messages.error(request, "Project '%s' must be unparsed & unxrefed first" % project.name)
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
-    rm(fullpath)
+    project.remove_file_instances()
+    project.remove_files()
     project.delete()
-
-    messages.success(request, "Project '%s' successfully deleted" % name)
-    return redirect(reverse("browser.views.list"))
+    
+    messages.success(request, "Project '%s' successfully deleted" % project.name)
+    return redirect(reverse("browser.views.project_list"))
 
 
 
@@ -341,8 +257,9 @@ def project_draw(request, project_id):
     
     if not access(pic_name, R_OK):
         # if no file in cache, create it
-        if generate_graph(pic_name, project, caller_f, xref_from, depth)==False :
-            messages.error(request, "Failed to create png graph.")
+        ret, err = generate_graph(pic_name, project, caller_f, xref_from, depth)
+        if ret==False :
+            messages.error(request, "Failed to create png graph: %s" % err)
             return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
     return redirect(reverse("browser.views.get_cache", args=(basename,)))

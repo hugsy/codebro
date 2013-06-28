@@ -1,0 +1,8 @@
+<!-- dir content canvas -->
+
+<p> <i class="icon-circle-arrow-right"></i> {{ path }} </p>
+<pre class="linenums prettyprint ">
+  <ol>{% for name, link in lines %}<li><a href="?file={{ link }}">{{ name }}</a></li>{% endfor %}</ol>
+</pre>
+
+<!-- end of canvas -->

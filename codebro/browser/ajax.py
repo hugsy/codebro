@@ -12,7 +12,7 @@ from dajaxice.decorators import dajaxice_register
 from dajaxice.exceptions import DajaxiceError
 
 from codebro import settings
-from analyzer.analysis import clang_parse_project, clang_xref_project
+from analyzer.analysis import clang_parse_project
 from analyzer.models import Project, Function, Xref, ModuleDiagnostic
 from browser.helpers import valid_method_or_404
 from browser.helpers import generate_graph
@@ -88,16 +88,12 @@ def ajax_project_unparse(request, project_id):
     for xref in project.xref_set.iterator():
         xref.delete()
         
-    for file in project.file_set.iterator():
-        for function in file.function_set.iterator():
-            for arg in function.argument_set.iterator():
-                arg.delete()
-                function.delete()
-        file.delete()
-
     for dbg in project.debug_set.iterator():
         dbg.delete()
-        
+
+    project.is_parsed = False
+    project.save()
+    
     ctx["status"]  = 0
     ctx["message"] = "Successfully unparsed ... Reloading page"
     return json.dumps(ctx)
@@ -144,7 +140,8 @@ def ajax_add_funcgraph_link(request, f, d, x):
     pic_name = settings.CACHE_PATH + "/" + basename
 
     if not os.access(pic_name, os.R_OK):
-        if generate_graph(pic_name, project, caller_f, xref, depth)==False :
+        ret, err = generate_graph(pic_name, project, caller_f, xref, depth)
+        if ret==False :
             return dajax.json()
 
     fmt_str = "<tr>"

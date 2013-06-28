@@ -36,8 +36,8 @@ class Archive:
  
     def extract(self, path):
         handle_open, handle_close, handle_extract, handle_mode, handle_check = self.handler
-        if not handle_check(self.name):
-            raise Exception("Invalid file type (%#x) '%s'" % (self.type, self.name))
+        if handle_check(self.name) == False:
+            raise Exception("Invalid file type %#x '%s'" % (self.type, self.name))
         
         p = handle_open(self.name, handle_mode)
         handle_extract(p, path)
@@ -45,21 +45,25 @@ class Archive:
         return True
 
     
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+    
+def get_file_extension(name):
+    for ext in Archive.extensions :
+        for suffix in Archive.extensions[ext]:
+            if name.endswith(suffix) :
+                return ext
+
+    return None
+
+
 def is_valid_file(f):
-    if f.size >= settings.MAX_UPLOAD_SIZE :
-        return False
-
-    ext = None
-    for i in Archive.extensions :
-        for extension in Archive.extensions[i]:
-            if f.name.endswith(extension) :
-                ext = i
-                break
-
-    if ext is None :
-        return False
-
-    return ext
+    return (f.size < settings.MAX_UPLOAD_SIZE) and (get_file_extension(f.name) is not None)
 
 
 def extract_archive(archive_name, project_name, extension):
@@ -111,9 +115,9 @@ def generate_graph(outfile, project, caller, xref, depth):
         graph.write_svg(outfile)
         
     except pydot.InvocationException, ie:
-        return False
+        return (False, ie)
 
-    return True
+    return (True, None)
     
         
 def link_node(graph, project, caller_f, xref_from, depth):

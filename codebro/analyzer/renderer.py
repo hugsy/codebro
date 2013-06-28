@@ -205,15 +205,18 @@ class CodeBroRenderer:
         
         """
         self.lexer = get_lexer_by_name("c", stripall=True)
+        self.formatter = None
+        self.project = codebro_project
+        self.hl = highlight_lines
+
+        
+    def render(self, filename):
         self.formatter = CodeBroHtmlFormatter(linenos="inline",
                                               cssclass="codebro",
                                               anchorlinenos=True,
                                               lineanchors="line",
-                                              codebro_project=codebro_project,
-                                              hl_lines=highlight_lines)
-
-    def render(self, filename):
-        
+                                              codebro_project=self.project,
+                                              hl_lines=self.hl)
         self.formatter.set_filename(filename)
         
         with open(filename, 'r') as f :

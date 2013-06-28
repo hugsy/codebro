@@ -113,8 +113,7 @@ def ajax_project_unparse(request, project_id):
     project.module_set.all().delete()
     project.xref_set.all().delete()
     project.debug_set.all().delete()
-    for f in project.file_set.all():
-        f.is_parsed = False
+    project.file_set.all().update( is_parsed=False )
     
     project.is_parsed = False
     project.save()

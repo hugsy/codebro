@@ -42,7 +42,7 @@ def add_function_declaration(project, file, data):
                 arg_o.save()
 
     if settings.DEBUG :
-        print "%s %s is declared in %s:%d" % (func.name ,
+        print "%s %s is declared in %s:%d" % (func.name,
                                               args,
                                               func.file.relative_name,
                                               func.line)
@@ -79,12 +79,15 @@ def add_function_call(project, file, data):
 
 @transaction.commit_manually
 def generate_file_xref(request, project, file, cparser=None):
+    local_instance = False
+    
     if file.is_parsed:
         return False
 
     if cparser is None :
         cparser = ClangParser(project)
-
+        local_instance = True
+        
     try: 
         for out in cparser.get_xref_calls(file.name):
             if len(out) == 5:  # FUNC_DECL
@@ -105,8 +108,29 @@ def generate_file_xref(request, project, file, cparser=None):
     else:
         transaction.commit()
 
+    if local_instance:
+        save_diagnostics(cparser, project)
+        
     return True
     
+@transaction.commit_manually
+def save_diagnostics(cparser, project):
+    try: 
+        for cat, fil, lin, error_msg in cparser.diags:
+            dbg = Debug()
+            dbg.category = cat
+            dbg.filepath = fil
+            dbg.line = lin
+            dbg.message = error_msg
+            dbg.project = project
+            dbg.save()
+    except:
+        transaction.rollback()
+    else:
+        transaction.commit()
+        
+    return
+
 
 def generate_project_xref(request, project):
     """
@@ -117,15 +141,7 @@ def generate_project_xref(request, project):
     for file in project.file_set.all():
         generate_file_xref(request, project, file, cparser)
     
-    for cat, fil, lin, error_msg in cparser.diags:
-        dbg = Debug()
-        dbg.category = cat
-        dbg.filepath = fil
-        dbg.line = lin
-        dbg.message = error_msg
-        dbg.project = project
-        dbg.save()
-        
+    save_diagnostics(cparser, project)  
 
     project.is_parsed = True
     project.save()

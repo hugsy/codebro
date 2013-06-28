@@ -2,7 +2,7 @@
 /**
  *
  */
-function dajax_init(tag, func, pid) {
+function dajax_init(tag, func, pid, filename) {
 	var button = $('#btn_'+tag);
 	if (button == null) {
 		bootbox.alert("Failed to find tag btn_"+tag);
@@ -11,8 +11,11 @@ function dajax_init(tag, func, pid) {
 	
 	button[0].disabled = 'disabled';
     button[0].value = 'Please Wait...'; 
-    
-    func(dajax_callback, {'project_id': pid});
+
+	if (filename == null)
+		func(dajax_callback, {'project_id': pid});
+	else
+		func(dajax_callback, {'project_id': pid, 'filename': filename});
     //setTimeout(function(){bootbox.alert('Yeah, I know, go grab some coffee while I\'m on it ... ');}, 60000);
 }
 

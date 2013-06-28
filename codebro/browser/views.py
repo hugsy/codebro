@@ -1,23 +1,17 @@
-from os import listdir, access, R_OK, unlink, rmdir
-from os.path import abspath, isfile, isdir, islink, join
 import unipath
 import hashlib 
-import re
 
 from django.http import HttpResponse, Http404
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.utils import timezone
 from django.utils.html import escape
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.exceptions import ValidationError, MultipleObjectsReturned
-from django.core import serializers
 
-from browser.models import Project, Language
-from analyzer.models import File, Function, Argument, Xref, Debug
+from browser.models import Project
+from analyzer.models import File, Function, Debug
 from browser.helpers import valid_method_or_404
 from browser.helpers import handle_uploaded_file
 from browser.helpers import is_valid_file, is_int, get_file_extension
@@ -108,7 +102,13 @@ def project_detail(request, project_id):
         content = project.browse_file(path, hl)
         if len(hl) > 0:
             ctx['jump_to'] 	= hl[0]
-            
+
+        ctx["is_parsed"] = False
+        refs = project.file_set.filter( name = path )
+        if len(refs) > 0:
+            ref = refs[0]
+            ctx["is_parsed"] = ref.is_parsed 
+        
     else :
         messages.error(request, "Inexistant path")
         
@@ -116,7 +116,7 @@ def project_detail(request, project_id):
     ctx['path'] 		= path
     ctx['lines'] 		= content
     ctx['is_dir']	  	= path.isdir()
-    ctx['parent_dir'] 	= path.parent
+    ctx['parent_dir']		= path.parent
     
     return render(request, 'project/detail.html', ctx)
 
@@ -253,9 +253,9 @@ def project_draw(request, project_id):
     base+= "@%d" % depth  if depth > 0 else ""
 
     basename = hashlib.sha256(base).hexdigest() + ".svg"
-    pic_name = settings.CACHE_PATH + "/" + basename 
-    
-    if not access(pic_name, R_OK):
+    pic_name = unipath.Path(settings.CACHE_PATH + "/" + basename).absolute()
+
+    if not pic_name.isfile():
         # if no file in cache, create it
         ret, err = generate_graph(pic_name, project, caller_f, xref_from, depth)
         if ret==False :
@@ -324,8 +324,8 @@ def get_cache(request, filename):
     """
     
     """
-    fullpath = settings.CACHE_PATH + '/' + filename
-    if not access(fullpath, R_OK):
+    fullpath = unipath.Path(settings.CACHE_PATH + '/' + filename)
+    if not fullpath.isfile():
         raise Http404
 
     with open(fullpath, 'r') as f:

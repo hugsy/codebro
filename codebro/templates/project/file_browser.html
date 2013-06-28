@@ -12,7 +12,12 @@
 
 <p> <i class="icon-circle-arrow-up"></i> [<a href="{%url 'browser.views.project_detail' project.id%}?file={{parent_dir}}/">Browse directory</a>] </p>
 
-<p> [<a href="#">Parse this file</a>] </p>
+{% if is_parsed == False %}
+<p> [<a href="#" onclick="dajax_init('parse', Dajaxice.browser.ajax_file_parse, {{project.id}}, '{{path}}');" >Parse this file</a>] </p>
+
+{% else %}
+<p> <i>File already parsed</i> </p>
+{% endif %}
 
 <div id="canvas_code">
 {% autoescape off %}
@@ -21,7 +26,6 @@
 {% endautoescape %}
 </div>
 
-<div id="function_menu" style="zIndex:1; visibility: hidden; background-color: white; width: 300px; border:
-     1px solid black;"></div>
+<div id="function_menu" style="zIndex:1; visibility: hidden; background-color: white; width: 300px; border: 1px solid black;"></div>
 
 <!-- end of canvas -->

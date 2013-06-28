@@ -4,13 +4,14 @@ from django.db import models
 from django.db import transaction
 
 from codebro import settings
-from browser.validators import validate_IsValidName, validate_PathNotEmpty
+from browser.validators import validate_IsValidName
+
 
 class TimeStampedModel(models.Model):
     """
     
     """
-    created			= models.DateTimeField(auto_now_add = True)
+    created		= models.DateTimeField(auto_now_add = True)
     modified 		= models.DateTimeField(auto_now = True)
     
     class Meta:
@@ -21,7 +22,7 @@ class Language(models.Model):
     """
 
     """
-    name 			= models.CharField(max_length=64)
+    name 		= models.CharField(max_length=64)
     extension 		= models.CharField(max_length=10)
     
     def __unicode__(self):
@@ -33,8 +34,8 @@ class Project(TimeStampedModel):
 
     """
     name 			= models.CharField(max_length = 64,
-                                       unique = True,
-                                       validators = [validate_IsValidName])
+                                                   unique = True,
+                                                   validators = [validate_IsValidName])
     description 	= models.TextField(max_length = 256)
     language 		= models.ForeignKey(Language)
     source_path		= models.TextField(max_length = 256)

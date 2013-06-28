@@ -124,9 +124,7 @@ class ClangParser:
         """
         
         """
-        # if settings.DEBUG:
-            # print ("Parsing '%s' with args : %s" % (filename, self.clang_args))
-            
+        
         self.parser = self.index.parse(filename, args=self.clang_args)
 
         if self.parser:

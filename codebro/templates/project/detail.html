@@ -44,7 +44,7 @@
 	    <div class="accordion-inner">
 	      
 	      <p>
-	      {% if project.is_parsed %}
+	      {% if project.is_parsed or not is_dir and is_parsed %}
 	      <i class="icon-ok"></i> Parsed	      
 	      <br/>		
 	      [<a href="{% url 'browser.views.project_analysis' project.id %}">Analysis module</a>]
@@ -53,24 +53,17 @@
 	      <input id="btn_unparse"
 				 type="button"
 				 class="btn btn-mini btn-primary"
-				 onclick="dajax_init('unparse', Dajaxice.browser.ajax_project_unparse, {{project.id}});" 
+				 onclick="dajax_init('unparse',
+				 Dajaxice.browser.ajax_project_unparse, {{project.id}}, null);" 
 				 value="Delete">
-	      
-	      {% elif project.xref_set.count != 0 and project.file_set.count != 0 %}	      
-	      <i class="icon-remove"></i> Not Parsed
-	      <input id="btn_parse"
-		     type="button"
-		     class="btn btn-mini btn-primary"
-		     onclick="#"
-		     disabled="disabled"
-		     value="Being Parsed!">
 	      
 	      {% else %}
 	      <i class="icon-remove"></i> Not Parsed
 	      <input id="btn_parse"
 		     type="button"
 		     class="btn btn-mini btn-primary"
-		     onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse, {{project.id}});" 
+		     onclick="dajax_init('parse', Dajaxice.browser.ajax_project_parse,
+					  {{project.id}}, null);" 
 		     value="Parse now!">
 	      {% endif %}
 	      </p>

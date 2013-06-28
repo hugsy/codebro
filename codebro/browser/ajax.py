@@ -9,11 +9,10 @@ from django.shortcuts import get_object_or_404
 from django.utils.html import escape
 from dajax.core import Dajax
 from dajaxice.decorators import dajaxice_register
-from dajaxice.exceptions import DajaxiceError
 
 from codebro import settings
-from analyzer.analysis import clang_parse_project
-from analyzer.models import Project, Function, Xref, ModuleDiagnostic
+from analyzer.analysis import clang_parse_project, clang_parse_file
+from analyzer.models import Project, Function, ModuleDiagnostic
 from browser.helpers import valid_method_or_404
 from browser.helpers import generate_graph
 
@@ -72,6 +71,37 @@ def ajax_project_parse(request, project_id):
 
 
 @dajaxice_register
+def ajax_file_parse(request, project_id, filename):
+    """
+    
+    """
+    project = get_object_or_404(Project, pk=project_id)
+    ctx = {"status" : -1, "message": ""}
+
+    filerefs = project.file_set.filter( name=filename )
+    if len(filerefs) == 0:
+        ctx["status"] = 1
+        ctx["message"] = "Invalid filename %s" % filename
+        return json.dumps(ctx)
+
+    fileref = filerefs[0]
+    
+    if project.is_parsed or fileref.is_parsed:
+        ctx["status"] = 1
+        ctx["message"] = "Already parsed"
+        return json.dumps(ctx)
+    
+    if clang_parse_file(request, project, fileref):
+        ctx["status"]  = 0
+        ctx["message"] = "Successfully parsed ... Reloading page"
+    else :
+        ctx["status"]  = 1
+        ctx["message"] = "Failed to parse..."
+        
+    return json.dumps(ctx)
+
+
+@dajaxice_register
 def ajax_project_unparse(request, project_id):
     """
     
@@ -79,18 +109,13 @@ def ajax_project_unparse(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     ctx = {"status" : -1, "message": ""}
 
-    for m in ModuleDiagnostic.objects.filter(module__project=project):
-        m.delete()
-
-    for m in project.module_set.iterator():
-        m.delete()
+    ModuleDiagnostic.objects.filter(module__project=project).delete()
+    project.module_set.all().delete()
+    project.xref_set.all().delete()
+    project.debug_set.all().delete()
+    for f in project.file_set.all():
+        f.is_parsed = False
     
-    for xref in project.xref_set.iterator():
-        xref.delete()
-        
-    for dbg in project.debug_set.iterator():
-        dbg.delete()
-
     project.is_parsed = False
     project.save()
     

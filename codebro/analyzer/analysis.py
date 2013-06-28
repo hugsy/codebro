@@ -10,11 +10,14 @@ def clang_parse_project(request, project):
     """
     wrapper, used to start xref process
     """
-    generate_project_xref(request, project)
-    project.is_parsed = True
-    project.save()
-    messages.info(request, "Successfully parsed")  
-    return True
+    return generate_project_xref(request, project)
+
+
+def clang_parse_file(request, project, file):
+    """
+    wrapper, used to start xref process
+    """
+    return generate_file_xref(request, project, file)
 
 
 def add_function_declaration(project, file, data):
@@ -39,7 +42,10 @@ def add_function_declaration(project, file, data):
                 arg_o.save()
 
     if settings.DEBUG :
-        print func.file.name, func.name, func.line, args
+        print "%s %s is declared in %s:%d" % (func.name ,
+                                              args,
+                                              func.file.relative_name,
+                                              func.line)
 
     return
 
@@ -63,15 +69,18 @@ def add_function_call(project, file, data):
     xref.save()
 
     if settings.DEBUG :
-        print xref.calling_function.name, 'calls', xref.called_function.name, 'line', xref.called_function_line, 'in', xref.calling_function.file.name
+        print "%s calls %s at %s:%d" % (xref.calling_function.name,
+                                        xref.called_function.name,
+                                        xref.calling_function.file.relative_name,
+                                        xref.called_function_line)
     
     return
 
 
 @transaction.commit_manually
-def generate_file_xref(project, file, cparser=None):
+def generate_file_xref(request, project, file, cparser=None):
     if file.is_parsed:
-        return
+        return False
 
     if cparser is None :
         cparser = ClangParser(project)
@@ -91,11 +100,12 @@ def generate_file_xref(project, file, cparser=None):
         if settings.DEBUG:
             print "An exception occured", e
         transaction.rollback()
-            
+        return False
+    
     else:
         transaction.commit()
-    
-    return
+
+    return True
     
 
 def generate_project_xref(request, project):
@@ -105,7 +115,7 @@ def generate_project_xref(request, project):
     cparser = ClangParser(project)
     
     for file in project.file_set.all():
-        generate_file_xref(project, file, cparser)
+        generate_file_xref(request, project, file, cparser)
     
     for cat, fil, lin, error_msg in cparser.diags:
         dbg = Debug()
@@ -116,7 +126,10 @@ def generate_project_xref(request, project):
         dbg.project = project
         dbg.save()
         
-    
+
+    project.is_parsed = True
+    project.save()
+        
     if project.xref_set.count() :
         messages.success(request, "Successfully xref-ed")
         return True
@@ -124,3 +137,4 @@ def generate_project_xref(request, project):
     else :
         messages.error(request, "No xref have been established")
         return False
+

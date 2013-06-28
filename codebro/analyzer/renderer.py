@@ -20,7 +20,7 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         """
         HtmlFormatter.__init__(self, **options)
         self.project = options['codebro_project']
-        self.is_xrefed = self.project.is_parsed
+        self.is_xrefed = False
         self.file = None
         self.functions = []
         self.func_idx = 0
@@ -48,6 +48,7 @@ class CodeBroHtmlFormatter(HtmlFormatter):
         """
         try :
             self.file = File.objects.get(name=name, project=self.project)
+            self.is_xrefed = self.file.is_parsed
             
         except File.DoesNotExist:
             self.functions = []

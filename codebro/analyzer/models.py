@@ -84,7 +84,7 @@ class Function(models.Model):
 
     """
     name 			= models.CharField(max_length=1024,
-                                       validators=[validate_PathNotEmpty])
+                                                   validators=[validate_PathNotEmpty])
     project 		= models.ForeignKey(Project)
     file 			= models.ForeignKey(File, null=True)
     line 			= models.PositiveIntegerField(null=True, default=0)

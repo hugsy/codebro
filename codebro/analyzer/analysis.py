@@ -124,7 +124,7 @@ def save_diagnostics(cparser, project):
             dbg.message = error_msg
             dbg.project = project
             dbg.save()
-    except:
+    except: 
         transaction.rollback()
     else:
         transaction.commit()

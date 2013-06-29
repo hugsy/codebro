@@ -199,8 +199,8 @@ def project_delete(request, project_id):
     
     project = get_object_or_404(Project, pk=project_id)
 
-    if project.is_parsed:
-        messages.error(request, "Project '%s' must be unparsed & unxrefed first" % project.name)
+    if project.xref_set.count() > 0 or project.debug_set.count() > 0:
+        messages.error(request, "Project '%s' must be unparsed first" % project.name)
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
 
     project.remove_file_instances()
@@ -220,18 +220,22 @@ def project_draw(request, project_id):
     
     project = get_object_or_404(Project, pk=project_id)
 
-    if not project.is_parsed:
-        messages.error(request, "Project must be xref-ed first")
-        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
-
-
     if "file" not in request.GET or "function" not in request.GET:
         messages.error(request, "Missing argument")
+        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+
+    files = project.file_set.filter( name=request.GET["file"] )
+    if len(files) < 1 :
+        messages.error(request, "Cannot find %s in project" % request.GET["file"])
+        return redirect( reverse("browser.views.project_detail", args=(project.id,)))
+
+    if not files[0].is_parsed and not project.is_parsed:
+        messages.error(request, "Project must be xref-ed first")
         return redirect( reverse("browser.views.project_detail", args=(project.id,)))
     
     callers = Function.objects.filter(project=project,
                                       name=request.GET["function"],
-                                      file__name=request.GET["file"])
+                                      file=files[0])
 
     if callers.count() == 0:
         messages.error(request, "No function matching criterias")

@@ -1,6 +1,0 @@
-*.pyc
-codebro/cache/*
-codebro/db/*
-codebro/sources/*
-TAGS
-TODO

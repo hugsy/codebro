@@ -1,6 +1,6 @@
 *.pyc
 codebro/cache/*
-codebro/db/codebro.sqlite3
-codebro/sources/
+codebro/db/*
+codebro/sources/*
 TAGS
 TODO

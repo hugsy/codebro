@@ -1,4 +1,4 @@
-#
+[B]#
 # Django settings for codebro project.
 #
 
@@ -29,12 +29,18 @@ ADMINS           = ( ("hugsy", "hugsy@pyc.li"), )
 MANAGERS         = ADMINS
 TEMPLATE_DIRS    = ( APP_PATH.child("templates"), )
 STATICFILES_DIRS = ( APP_PATH.child("assets"), )
+CACHED_SVG_FMT   = "project#%d-fromFunc#%d-fu%d-%s@depth#%d"
 
 
 CLANG_PARSE_OPTIONS = [ "-Wextra",
+                        "-O0",
+                        "-Wall",
+                        "-Wunused-function",
+                        "-Wtautological-compare",
                         "-Wformat-security",
-                        "-I/usr/lib/gcc/x86_64-unknown-linux-gnu/4.7.2/include",
+                        "-I/usr/lib/gcc/x86_64-linux-gnu/4.8.1/include",
                         "-I/usr/include",
+                        "-I/usr/local/lib/clang/3.4/include"
                         ]
 
 DATABASES = {

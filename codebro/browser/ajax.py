@@ -1,7 +1,7 @@
 import json
 import hashlib
 import xml.sax
-import os
+import unipath
 
 from django.core import serializers
 from django.core.urlresolvers import reverse
@@ -109,10 +109,10 @@ def ajax_project_unparse(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     ctx = {"status" : -1, "message": ""}
 
-    ModuleDiagnostic.objects.filter(module__project=project).delete()
-    project.module_set.all().delete()
-    project.xref_set.all().delete()
-    project.debug_set.all().delete()
+    for i in ModuleDiagnostic.objects.filter(module__project=project): i.delete()
+    for i in project.module_set.all(): i.delete()
+    for i in project.xref_set.all(): i.delete()
+    for i in project.debug_set.all(): i.delete()
     project.file_set.all().update( is_parsed=False )
     
     project.is_parsed = False
@@ -156,14 +156,11 @@ def ajax_add_funcgraph_link(request, f, d, x):
 
     
     project = caller_f.project
-    
-    base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
-    base+= "@%d" % depth  if depth > 0 else 0
+    base = settings.CACHED_SVG_FMT % (project.id, caller_f.id, caller_f.id, depth)
+    hashed_basename = hashlib.sha256(base).hexdigest() + ".svg"
+    pic_name = unipath.Path(settings.CACHE_PATH + "/" + hashed_basename)
 
-    basename = hashlib.sha256(base).hexdigest() + ".svg"
-    pic_name = settings.CACHE_PATH + "/" + basename
-
-    if not os.access(pic_name, os.R_OK):
+    if not pic_name.isfile():
         ret, err = generate_graph(pic_name, project, caller_f, xref, depth)
         if ret==False :
             return dajax.json()
@@ -178,7 +175,7 @@ def ajax_add_funcgraph_link(request, f, d, x):
     line = fmt_str.format(caller_f.name,
                           xref,
                           depth,
-                          reverse('browser.views.get_cache',args=(basename,)))
+                          reverse('browser.views.get_cache',args=(hashed_basename,)))
     dajax.assign('#table-graphs', 'innerHTML', line)
     return dajax.json()
 

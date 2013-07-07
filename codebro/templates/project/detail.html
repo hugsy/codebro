@@ -42,7 +42,7 @@
 	  </div>
 	  <div id="analysis" class="accordion-body collapse">
 	    <div class="accordion-inner">
-	      
+	      {% csrf_token #required for dajaxice %}
 	      <p>
 	      {% if project.is_parsed or not is_dir and is_parsed %}
 	      <i class="icon-ok"></i> Parsed	      

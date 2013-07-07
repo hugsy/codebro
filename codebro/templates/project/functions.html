@@ -6,46 +6,65 @@
 
 <div class="row">
   <div class="span12">
-    
+	
+	<!-- start of paginator -->
     {% if functions %}
     <div class="pager">
       <ul>
-	
-	{% if functions.has_previous %}
-	<li><a href="?page={{ functions.previous_page_number }}">Previous</a></li>
+		{% if functions.has_previous %}
+		<li><a href="?page={{ functions.previous_page_number }}">Previous</a></li>
         {% endif %}
-
-	<li>Page {{ functions.number }} of {{ functions.paginator.num_pages }}</li>
-	
-	{% if functions.has_next %}
-	<li><a href="?page={{ functions.next_page_number }}">Next</a></li>
+		<li>Page {{ functions.number }} of {{ functions.paginator.num_pages }}</li>
+		{% if functions.has_next %}
+		<li><a href="?page={{ functions.next_page_number }}">Next</a></li>
         {% endif %}
       </ul>
     </div>
     {% endif %}
-    
+    <!-- end of paginator -->
+
+	<!-- functions table -->
     <table class="table table-hover">
       <thead>
-	<tr>
-	  <th>Name</th>
-	  <th>File</th>
-	  <th>Declared line</th>
-	  <th>Link</th>
-	</tr>
+		<tr>
+		  <th>Name</th>
+		  <th>Declaration at</th>
+		  <th>Arguments</th>
+		  <th>Xref From</th>
+		  <th>Xref To</th>
+		</tr>
       </thead>
       
       <tbody>
-	{% for function in functions %}
-	<tr>
-	  <td>{{function.name}}</td>
-	  <td>{{function.file.relative_name}}</td>
-	  <td>{{function.line}}</td>
-	  <td><a href="{% url 'browser.views.project_detail' project.id %}?file={{function.file.name}}#line-{{function.line}}">here</a></td>
-	</tr>
-	{% endfor %}
+		{% for function in functions %}
+		<tr>
+		  <td><a href="{{ function.link }}">{{function.name}}</a></td>
+		  <td><a href="{{ function.file.link }}">{{function.file.relative_name}}</a> +{{function.line}}</td>
+		  <td> ({{ function.args }}) </td>
+		  <td>{{ function.caller.count }}</td>
+		  <td>{{ function.callee.count }}</td>
+		</tr>
+		{% endfor %}
       </tbody>
-      
     </table>
+	<!-- end of functions table -->
+
+	<!-- start of paginator -->
+    {% if functions %}
+    <div class="pager">
+      <ul>
+		{% if functions.has_previous %}
+		<li><a href="?page={{ functions.previous_page_number }}">Previous</a></li>
+        {% endif %}
+		<li>Page {{ functions.number }} of {{ functions.paginator.num_pages }}</li>
+		{% if functions.has_next %}
+		<li><a href="?page={{ functions.next_page_number }}">Next</a></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+    <!-- end of paginator -->
+	
   </div>
 </div>
 

@@ -60,14 +60,15 @@ $ git clone https://github.com/hugsy/codebro.git && pip install -r codebro/requi
 $ python -c 'import django; import clang;' && echo 'Party can start now!'
 ```
 
-* Create database structure, and fill with initial initial data :
+* Move inside `codebro` directory, create database structure, and fill with initial initial data :
 ```
-$ codebro/manage.py syncdb
+$ cd codebro
+$ ./manage.py syncdb
 ```
 
 * Launch the server
 ```
-$ codebro/manage.py runserver
+$ ./manage.py runserver
 ```
 * You can now add, browse and parse applications.
 

@@ -2,6 +2,7 @@ import clang.cindex
 import re
 
 from django.db import models
+from django.core.urlresolvers import reverse
 
 from browser.validators import validate_PathNotEmpty
 from browser.models import Project
@@ -24,6 +25,12 @@ class File(models.Model):
     @property
     def relative_name(self):
         return self.name.replace(SRC_PATH+"/", "")
+
+    @property
+    def link(self):
+        link = reverse('browser.views.project_detail', args=(self.project.id,))
+        link+= "?file={0}".format(self.name)
+        return link
     
     def grep(self, pattern):
         """
@@ -91,13 +98,22 @@ class Function(models.Model):
     rtype 			= models.CharField(max_length=16, null=True)
     
     def __unicode__(self):
-        return "%s:%d - <%s> %s (%s)" % (self.file, self.line if self.line is not None else 0, self.rtype,
-                                         self.name, self.args)
+        return "%s:%d - <%s> %s (%s)" % (self.file.relative_name,
+                                         self.line if self.line is not None else 0,
+                                         self.rtype,
+                                         self.name,
+                                         self.args)
 
     @property
     def args(self):
         args = self.argument_set.iterator()
         return ', '.join([x.__unicode__() for x in args])
+
+    @property
+    def link(self):
+        link = reverse('browser.views.project_detail', args=(self.project.id,))
+        link+= "?file={0}&hl={1}#line-{1}".format(self.file.name, self.line)
+        return link
 
     
 class Argument(models.Model):
@@ -133,7 +149,7 @@ class Diagnostic(models.Model):
 
     """
     filepath 	= models.CharField(max_length=1024)
-    line 		= models.PositiveIntegerField()
+    line	= models.PositiveIntegerField()
     message 	= models.TextField()
 
     class Meta:
@@ -176,7 +192,7 @@ class Module(models.Model):
     """
 
     """
-    name 		= models.CharField(max_length=64)
+    name 	= models.CharField(max_length=64)
     project 	= models.ForeignKey(Project)
     
 

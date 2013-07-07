@@ -247,21 +247,28 @@ def project_draw(request, project_id):
 
     caller_f = callers[0]
 
-    try :  depth = int(request.GET.get('depth', -1))
-    except ValueError:  depth = -1
+    try :
+        depth = int(request.GET.get('depth', -1))
+    except ValueError:
+        depth = -1
 
-    xref_from = request.GET.get("xref", True)
-    xref_from = False if request.GET.get('xref')=='1' else True
+    # xref_to = request.GET.get("xref", True)
+    # xref_to = False if request.GET.get('xref')=='1' else True
 
-    base = "p%d-f%d-fu%d" % (project.id, caller_f.id, caller_f.id)
-    base+= "@%d" % depth  if depth > 0 else ""
-
+    if request.GET.get('xref', '1')=='1':
+        xref_to = True
+        base = settings.CACHED_SVG_FMT % (project.id, caller_f.id, caller_f.id, "up", depth)
+    else:
+        xref_to = True
+        base = settings.CACHED_SVG_FMT % (project.id, caller_f.id, caller_f.id, "down", depth)
+        
+    
     basename = hashlib.sha256(base).hexdigest() + ".svg"
     pic_name = unipath.Path(settings.CACHE_PATH + "/" + basename).absolute()
 
     if not pic_name.isfile():
         # if no file in cache, create it
-        ret, err = generate_graph(pic_name, project, caller_f, xref_from, depth)
+        ret, err = generate_graph(pic_name, project, caller_f, xref_to, depth)
         if ret==False :
             messages.error(request, "Failed to create png graph: %s" % err)
             return redirect( reverse("browser.views.project_detail", args=(project.id,)))
@@ -289,8 +296,9 @@ def project_functions(request, project_id):
     except EmptyPage:
         functions = paginator.page(paginator.num_pages)
         
-    ctx = {'project' : project ,
+    ctx = {'project' : project,
            'functions': functions}
+    
     
     return render(request, 'project/functions.html', ctx)
 

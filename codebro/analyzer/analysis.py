@@ -22,30 +22,24 @@ def clang_parse_file(request, project, file):
 
 def add_function_declaration(project, file, data):
     funcname, filename, line, rtype, args = data
-    func, created = Function.objects.get_or_create(name = funcname,
-                                                   file = file,
-                                                   project = project)
+    function,created = Function.objects.get_or_create(name = funcname,
+                                                      file = file,
+                                                      project = project)
+    function.line  = line
+    function.rtype = rtype
+    function.save()
 
-    func.line  = line
-    func.rtype = rtype
-    func.save()
-        
-    if created:
-        args_o = []
-        
-        for cur_arg_name, cur_arg_type in args:
-            arg = Argument()
-            arg.name, arg.type = (cur_arg_name, cur_arg_type)
-            arg.function = func
-
-        for arg_o in args_o:
-                arg_o.save()
+    for cur_arg_name, cur_arg_type in args:
+        arg = Argument()
+        arg.name, arg.type = (cur_arg_name, cur_arg_type)
+        arg.function = function
+        arg.save()
 
     if settings.DEBUG :
-        print "%s %s is declared in %s:%d" % (func.name,
-                                              args,
-                                              func.file.relative_name,
-                                              func.line)
+        print "%s %s is declared in %s:%d" % (function.name,
+                                              function.args,
+                                              function.file.relative_name,
+                                              function.line)
 
     return
 

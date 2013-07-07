@@ -67,19 +67,22 @@ def is_valid_file(f):
 
 
 def extract_archive(archive_name, project_name, extension):
+    """
+    extract archive to specified directory
+    """
+    path = unipath.Path( '/'.join([settings.SRC_PATH, project_name]) ).absolute()
+    
     try:
-        path = unipath.Path( '/'.join([settings.SRC_PATH, project_name]) )
         path.mkdir(mode=0755)
         
     except OSError:
-        unlink(archive_name)
+        path.rmtree()
         return None
     
     archive = Archive(archive_name, extension)
     archive.extract(path)
-
-    os.unlink(archive_name)
-    return path
+    unipath.Path(archive_name).remove()
+    return str(path)
 
 
 def handle_uploaded_file(file_o, project_name, extension):
@@ -97,19 +100,25 @@ def valid_method_or_404(request, methods):
         raise Http404
 
     
-def generate_graph(outfile, project, caller, xref, depth):
+def generate_graph(outfile, project, caller, xref_to, depth):
     """
     
     """
 
     title = "Callgraph"
-    title+= "To" if xref==True else "From"
+    title+= "To" if xref_to==True else "From"
     title+= ": %s:%s" % (project.name, caller.name)
-    
-    graph = pydot.Dot(graph_type="graph", graph_name=title,
-                      suppress_disconnected=False, simplify=False,)
-    
-    link_node(graph, project, caller, xref, depth)
+
+    if xref_to :
+        graph = pydot.Dot(graph_type="graph", graph_name=title,
+                          suppress_disconnected=False, simplify=False,
+                          rankdir='TB', splines='ortho')
+    else :
+        graph = pydot.Dot(graph_type="graph", graph_name=title,
+                          suppress_disconnected=False, simplify=False,
+                          rankdir='BT', splines='ortho', ratio="fill")
+        
+    link_node(graph, project, caller, xref_to, depth)
     
     try :
         graph.write_svg(outfile)
@@ -130,7 +139,7 @@ def link_node(graph, project, caller_f, xref_from, depth):
         else:
             depth -= 1
         
-    caller_n = pydot.Node(caller_f.name)
+    caller_n = pydot.Node(caller_f.name, height=0.80, width=0.80, shape="ellipse")
     graph.add_node(caller_n)
 
     if xref_from:
@@ -141,11 +150,11 @@ def link_node(graph, project, caller_f, xref_from, depth):
     for xref in xrefs :
         if xref_from:
             called_function = xref.called_function
-            callee_n = pydot.Node(called_function.name)
+            callee_n = pydot.Node(called_function.name, height=0.80, width=0.80, shape="ellipse")
             sub_xrefs = project.xref_set.filter(project=project, calling_function=called_function)
         else:
             called_function = xref.calling_function
-            callee_n = pydot.Node(called_function.name)
+            callee_n = pydot.Node(called_function.name, height=0.80, width=0.80, shape="ellipse")
             sub_xrefs = project.xref_set.filter(project=project, called_function=called_function)
 
         if sub_xrefs.count():
@@ -166,18 +175,19 @@ def link_node(graph, project, caller_f, xref_from, depth):
             edge = pydot.Edge(callee_n, caller_n)
 
         # edge label
-        lbl = xref.calling_function.file.name.replace(project.code_path+'/', '')
+        lbl = xref.calling_function.file.relative_name
         lbl+= '+'
         lbl+= str(xref.called_function_line)
+        edge.set_labelfontsize(4)
         edge.set_label(lbl)
-
+        edge.set_labelfontname("Courier")
+        
         # edge url
         url = reverse('browser.views.project_detail', args=(project.id, ))
         args = "?file=%s&hl=%s"
         args%= (xref.calling_function.file.name, xref.called_function_line)
         edge.set_URL(url + args)
         
-        edge.set_fontsize(8)
-        
+        edge.set_rank("same")
         graph.add_edge(edge)
         

@@ -128,12 +128,13 @@ class Project(TimeStampedModel):
         
         renderer = CodeBroRenderer(self, highlight_lines)
         return renderer.render(filepath)
-
-
+    
+    
     @transaction.commit_manually
     def remove_file_instances(self):
         try:
-            self.file_set.all().delete()
+            for file_instance in self.file_set.all() :
+                file_instance.delete()
                 
         except Exception, e:
             if settings.DEBUG:
@@ -142,7 +143,6 @@ class Project(TimeStampedModel):
             
         else:
             transaction.commit()
-            
         return
     
             

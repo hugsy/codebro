@@ -1,4 +1,4 @@
-[B]#
+#
 # Django settings for codebro project.
 #
 

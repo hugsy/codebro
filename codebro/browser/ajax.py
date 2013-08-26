@@ -156,7 +156,10 @@ def ajax_add_funcgraph_link(request, f, d, x):
 
     
     project = caller_f.project
-    base = settings.CACHED_SVG_FMT % (project.id, caller_f.id, caller_f.id, depth)
+    if f:
+        base = settings.CACHED_SVG_FMT % (project.id, caller_f.id, caller_f.id, "up", depth)
+    else :
+        base = settings.CACHED_SVG_FMT % (project.id, caller_f.id, caller_f.id, "down", depth)
     hashed_basename = hashlib.sha256(base).hexdigest() + ".svg"
     pic_name = unipath.Path(settings.CACHE_PATH + "/" + hashed_basename)
 

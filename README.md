@@ -37,8 +37,9 @@ That being said, if you still wanna go further, read below.
 
 
 ## Install
+`codebro` can be setup manually or as a bundle using docker. The latter is recommended as it makes the whole process of deployment totally automatic.
 
-### Using docker (recommended)
+### Using docker
 * Install docker
 * Clone codebro repository
 ```

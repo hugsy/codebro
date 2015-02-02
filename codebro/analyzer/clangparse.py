@@ -15,11 +15,13 @@ class ClangParser:
     """
     
     """
-    
+
     def __init__(self, project, clang_args=[]):
         """
         
         """
+        clang.cindex.Config.set_library_file("/usr/lib/llvm-3.4/lib/libclang-3.4.so.1")
+
         self.project = project
         self.root_dir = unipath.Path(self.project.code_path)
         self.index = Index.create()

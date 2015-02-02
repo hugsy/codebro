@@ -27,7 +27,6 @@ That being said, if you still wanna go further, read below.
 
 
 ## Requires
-
 * LLVM + Clang (with Python bindings)
 * Python 2.7+ (but not Python 3.x)
 * Django 1.5
@@ -39,6 +38,24 @@ That being said, if you still wanna go further, read below.
 
 ## Install
 
+### Using docker (recommended)
+* Install docker
+* Clone codebro repository
+```
+$ git clone https://github.com/hugsy/codebro.git && cd codebro
+```
+* Build the `codebro` image automagically (go grab a coffee though)
+```
+$ docker build -t codebro-docker-image .
+```
+* Run it in a detach instance, binding `codebro` listening
+```
+$ docker run --name codebro -p 8000:8000 -d codebro-docker-image
+```
+
+That's all folks !
+
+### Manually 
 * Get and install `llvm` engine and `clang` compiler. Make sure Python bindings are compiled as well
 (http://clang.llvm.org/get_started.html)
 

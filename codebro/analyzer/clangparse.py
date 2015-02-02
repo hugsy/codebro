@@ -1,10 +1,10 @@
 import unipath
+import clang 
 
 from os import access, R_OK, walk, path
 
 from clang.cindex import CursorKind
 from clang.cindex import Index
-# from clang.cindex import TypeKind
 
 from codebro import settings
 from modules.format_string import FormatStringModule

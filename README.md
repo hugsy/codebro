@@ -3,7 +3,8 @@
 
 ## What is it ?
 
-Web based code browser, using clang AST parser to create cross-reference between
+![CodeBro](https://camo.githubusercontent.com/a13b4e0e8b839bf060e746302d2dab8c94962cf8/687474703a2f2f692e696d6775722e636f6d2f7776634d3548422e706e67)
+`CodeBro` is a web based code browser, using clang AST parser to create cross-reference between
 function calls. For those interested, all this idea came from [Eli Bendersky's
 website](http://eli.thegreenplace.net/2011/07/03/parsing-c-in-python-with-clang/). 
 Parsing AST makes it easy to spot trivial bugs, and using callgraph

@@ -133,11 +133,11 @@ def project_new(request):
         
         if form.is_valid():
             if 'file' in request.FILES:
-                file = request.FILES['file']
+                uploaded_file = request.FILES['file']
                  
-                if is_valid_file(file):
-                    ext = get_file_extension(file.name)
-                    if handle_uploaded_file(file, form.cleaned_data['name'], ext) is not None :
+                if is_valid_file(uploaded_file):
+                    ext = get_file_extension(uploaded_file.name)
+                    if handle_uploaded_file(uploaded_file, form.cleaned_data['name'], ext) is not None :
                         form.cleaned_data['source_path'] = form.cleaned_data['name']
                         project = Project.create(form.cleaned_data)
                         if project:
@@ -146,11 +146,11 @@ def project_new(request):
                         else:
                             form.errors['project']= ["Failed to create project"]
                 else :
-                    form.errors['extension']= ["File extension is invalid"]
+                    form.errors['extension']= ["File extension is invalid: is_valid_file(uploaded_file) failed"]
             else :
                 form.errors['file']= ["Error while handling uploaded file"]
         else :
-            form.errors['file'] = ["File is not valid"]
+            form.errors['file'] = ["File is not valid: form.is_valid() failed"]
             
         msg = "Invalid form: "
         msg+= ", ".join(["'%s': %s"%(k,v[0]) for k,v in form.errors.iteritems()])

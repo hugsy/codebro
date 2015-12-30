@@ -9,14 +9,14 @@ APP_PATH         = Path(__file__).ancestor(2)
 SRC_PATH         = APP_PATH.child("sources")
 CACHE_PATH       = APP_PATH.child("cache")
 DB_PATH          = APP_PATH.child("db").child("codebro.sqlite3")
-MAX_UPLOAD_SIZE  = 100 * 1024 * 1024 
+MAX_UPLOAD_SIZE  = 100 * 1024 * 1024
 DEBUG            = True
 TEMPLATE_DEBUG   = DEBUG
 SECRET_KEY       = "c0d3Br0_k1ck_@$$"
 ROOT_URLCONF     = "codebro.urls"
 WSGI_APPLICATION = "codebro.wsgi.application"
-TIME_ZONE        = "Australia/Melbourne"
-LANGUAGE_CODE    = "en-us"
+TIME_ZONE        = "Europe/Madrid"
+LANGUAGE_CODE    = "es"
 SITE_ID          = 1
 USE_I18N         = True
 USE_L10N         = True
@@ -25,7 +25,7 @@ MEDIA_ROOT       = APP_PATH.child("media")
 MEDIA_URL        = "/media/"
 STATIC_ROOT      = APP_PATH.child("static")
 STATIC_URL       = "/static/"
-ADMINS           = ( ("hugsy", "hugsy@pyc.li"), )
+ADMINS           = ( ("admin", "devnull@libcrack.so"), )
 MANAGERS         = ADMINS
 TEMPLATE_DIRS    = ( APP_PATH.child("templates"), )
 STATICFILES_DIRS = ( APP_PATH.child("assets"), )
@@ -38,9 +38,9 @@ CLANG_PARSE_OPTIONS = [ "-Wextra",
                         "-Wunused-function",
                         "-Wtautological-compare",
                         "-Wformat-security",
-                        "-I/usr/lib/gcc/x86_64-linux-gnu/4.8.1/include",
+                        "-I/usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include",
                         "-I/usr/include",
-                        "-I/usr/local/lib/clang/3.4/include"
+                        "-I/usr/lib/clang/3.7.0/include"
                         ]
 
 DATABASES = {
@@ -89,7 +89,7 @@ LOGGING = {
             "()": "django.utils.log.RequireDebugFalse"
         }
     },
-    
+
     "handlers": {
         "mail_admins": {
             "level": "ERROR",
@@ -97,7 +97,7 @@ LOGGING = {
             "class": "django.utils.log.AdminEmailHandler"
         }
     },
-    
+
     "loggers": {
         "django.request": {
             "handlers": ["mail_admins"],

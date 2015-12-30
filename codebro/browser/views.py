@@ -157,8 +157,7 @@ def project_new(request):
                                 "Failed to create project"]
                 else:
                     form.errors['extension'] = [
-                        "File extension is invalid. Allowed extensions: {0}".format(
-                            Archive.extensions)]
+                        "File extension is invalid. Allowed extensions: {0}".format(Archive.extensions.values())]
             else:
                 form.errors['file'] = ["Error while handling uploaded file"]
         else:

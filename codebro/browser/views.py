@@ -97,7 +97,8 @@ def project_detail(request, project_id):
         content = project.list_directory(path)
 
     elif path.isfile():
-        hl = sorted([int(i) for i in request.GET.get('hl', '').split(",") if is_int(i)])
+        hl = sorted([int(i) for i in request.GET.get(
+            'hl', '').split(",") if is_int(i)])
         content = project.browse_file(path, hl)
         if len(hl) > 0:
             ctx['jump_to'] = hl[0]
@@ -136,24 +137,36 @@ def project_new(request):
 
                 if is_valid_file(uploaded_file):
                     ext = get_file_extension(uploaded_file.name)
-                    if handle_uploaded_file(uploaded_file, form.cleaned_data['name'], ext) is not None:
-                        form.cleaned_data['source_path'] = form.cleaned_data['name']
+                    if handle_uploaded_file(
+                            uploaded_file,
+                            form.cleaned_data['name'],
+                            ext) is not None:
+                        form.cleaned_data[
+                            'source_path'] = form.cleaned_data['name']
                         project = Project.create(form.cleaned_data)
                         if project:
                             messages.success(request, "Successfully added")
                             return redirect(
-                                reverse('browser.views.project_detail', args=(project.id,)))
+                                reverse(
+                                    'browser.views.project_detail',
+                                    args=(
+                                        project.id,
+                                    )))
                         else:
-                            form.errors['project'] = ["Failed to create project"]
+                            form.errors['project'] = [
+                                "Failed to create project"]
                 else:
-                    form.errors['extension'] = ["File extension is invalid. Allowed extensions: {0}".format(Archive.extensions)]
+                    form.errors['extension'] = [
+                        "File extension is invalid. Allowed extensions: {0}".format(
+                            Archive.extensions)]
             else:
                 form.errors['file'] = ["Error while handling uploaded file"]
         else:
             form.errors['file'] = ["File is not valid"]
 
         msg = "Invalid form: "
-        msg += ", ".join(["'%s': %s" % (k, v[0]) for k, v in form.errors.iteritems()])
+        msg += ", ".join(["'%s': %s" % (k, v[0])
+                          for k, v in form.errors.iteritems()])
         messages.error(request, msg)
 
         return render(request, 'project/new.html',
@@ -208,14 +221,25 @@ def project_delete(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
 
     if project.xref_set.count() > 0 or project.debug_set.count() > 0:
-        messages.error(request, "Project '%s' must be unparsed first" % project.name)
-        return redirect(reverse("browser.views.project_detail", args=(project.id,)))
+        messages.error(
+            request,
+            "Project '%s' must be unparsed first" %
+            project.name)
+        return redirect(
+            reverse(
+                "browser.views.project_detail",
+                args=(
+                    project.id,
+                )))
 
     project.remove_file_instances()
     project.remove_files()
     project.delete()
 
-    messages.success(request, "Project '%s' successfully deleted" % project.name)
+    messages.success(
+        request,
+        "Project '%s' successfully deleted" %
+        project.name)
     return redirect(reverse("browser.views.project_list"))
 
 
@@ -238,12 +262,25 @@ def project_draw(request, project_id):
 
     files = project.file_set.filter(name=request.GET["file"])
     if len(files) < 1:
-        messages.error(request, "Cannot find %s in project" % request.GET["file"])
-        return redirect(reverse("browser.views.project_detail", args=(project.id,)))
+        messages.error(
+            request,
+            "Cannot find %s in project" %
+            request.GET["file"])
+        return redirect(
+            reverse(
+                "browser.views.project_detail",
+                args=(
+                    project.id,
+                )))
 
     if not files[0].is_parsed and not project.is_parsed:
         messages.error(request, "Project must be xref-ed first")
-        return redirect(reverse("browser.views.project_detail", args=(project.id,)))
+        return redirect(
+            reverse(
+                "browser.views.project_detail",
+                args=(
+                    project.id,
+                )))
 
     callers = Function.objects.filter(project=project,
                                       name=request.GET["function"],
@@ -251,11 +288,21 @@ def project_draw(request, project_id):
 
     if callers.count() == 0:
         messages.error(request, "No function matching criterias")
-        return redirect(reverse("browser.views.project_detail", args=(project.id,)))
+        return redirect(
+            reverse(
+                "browser.views.project_detail",
+                args=(
+                    project.id,
+                )))
 
     elif callers.count() > 1:
         messages.error(request, "More than one function match criterias")
-        return redirect(reverse("browser.views.project_detail", args=(project.id,)))
+        return redirect(
+            reverse(
+                "browser.views.project_detail",
+                args=(
+                    project.id,
+                )))
 
     caller_f = callers[0]
 
@@ -284,7 +331,12 @@ def project_draw(request, project_id):
         ret, err = generate_graph(pic_name, project, caller_f, xref_to, depth)
         if not ret:
             messages.error(request, "Failed to create png graph: %s" % err)
-            return redirect(reverse("browser.views.project_detail", args=(project.id,)))
+            return redirect(
+                reverse(
+                    "browser.views.project_detail",
+                    args=(
+                        project.id,
+                    )))
 
     return redirect(reverse("browser.views.get_cache", args=(basename,)))
 
@@ -341,7 +393,7 @@ def project_analysis(request, project_id):
         dbgs.append(o)
 
     ctx = {'project': project,
-            'dbgs': dbgs}
+           'dbgs': dbgs}
 
     return render(request, 'project/analysis.html', ctx)
 

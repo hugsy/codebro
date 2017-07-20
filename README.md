@@ -6,12 +6,12 @@
 ![CodeBro](https://camo.githubusercontent.com/a13b4e0e8b839bf060e746302d2dab8c94962cf8/687474703a2f2f692e696d6775722e636f6d2f7776634d3548422e706e67)
 `CodeBro` is a web based code browser, using clang AST parser to create cross-reference between
 function calls. For those interested, all this idea came from [Eli Bendersky's
-website](http://eli.thegreenplace.net/2011/07/03/parsing-c-in-python-with-clang/). 
+website](http://eli.thegreenplace.net/2011/07/03/parsing-c-in-python-with-clang/).
 Parsing AST makes it easy to spot trivial bugs, and using callgraph
 makes it easier to focus on potential exploitability on this bug.
 
 It is *NOT* built in any way for production use and do not make it reachable
-from public Internet or "You're gonna have a bad time" ! 
+from public Internet or "You're gonna have a bad time" !
 
 
 ### Disclaimer
@@ -24,7 +24,7 @@ you're sure it's bug, file it;
 * I don't advise to parse and x-ref *huge* source code trees, a better approach
 would be to split it into sub-projects;
 
-That being said, if you still wanna go further, read below. 
+That being said, if you still wanna go further, read below.
 
 
 ## Requires
@@ -40,24 +40,24 @@ That being said, if you still wanna go further, read below.
 ## Install
 `codebro` can be setup manually or as a bundle using docker. The latter is recommended as it makes the whole process of deployment totally automatic.
 
-### Using docker
-* Install docker
+
+### Using Vagrant (recommended)
+
+* Install [Vagrant](https://www.vagrantup.com/)
 * Clone codebro repository
 ```
 $ git clone https://github.com/hugsy/codebro.git && cd codebro
 ```
 * Build the `codebro` image automagically (go grab a coffee though)
 ```
-$ docker build -t codebro-docker-image .
-```
-* Run it in a detach instance, binding `codebro` listening
-```
-$ docker run --name codebro -p 8000:8000 -d codebro-docker-image
+$ vagrant up --provision
 ```
 
-That's all folks !
+That's all folks ! Vagrant will forward TCP/8000 to your `codebro` instance in
+the VM. Start using `codebro` by visiting `http://localhost:8000`.
 
-### Manually 
+
+### Manually
 * Get and install `llvm` engine and `clang` compiler. Make sure Python bindings are compiled as well
 (http://clang.llvm.org/get_started.html)
 
@@ -74,7 +74,7 @@ $ workon codebro
 $ git clone https://github.com/hugsy/codebro.git && pip install -r codebro/requirements.txt
 ```
 
-* Make sure it works 
+* Make sure it works
 ```
 $ python -c 'import django; import clang;' && echo 'Party can start now!'
 ```
@@ -93,4 +93,3 @@ $ ./manage.py runserver
 
 ## License & Author
 Written by @_hugsy_ and released under GPL v2
-

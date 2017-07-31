@@ -5,49 +5,49 @@
 from unipath import Path
 
 
-APP_PATH         = Path(__file__).ancestor(2)
-SRC_PATH         = APP_PATH.child("sources")
-CACHE_PATH       = APP_PATH.child("cache")
-DB_PATH          = APP_PATH.child("db").child("codebro.sqlite3")
-MAX_UPLOAD_SIZE  = 100 * 1024 * 1024 
-DEBUG            = True
-TEMPLATE_DEBUG   = DEBUG
-SECRET_KEY       = "c0d3Br0_k1ck_@$$"
-ROOT_URLCONF     = "codebro.urls"
+APP_PATH = Path(__file__).ancestor(2)
+SRC_PATH = APP_PATH.child("sources")
+CACHE_PATH = APP_PATH.child("cache")
+DB_PATH = APP_PATH.child("db").child("codebro.sqlite3")
+MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+SECRET_KEY = "c0d3Br0_k1ck_@$$"
+ROOT_URLCONF = "codebro.urls"
 WSGI_APPLICATION = "codebro.wsgi.application"
-TIME_ZONE        = "Australia/Melbourne"
-LANGUAGE_CODE    = "en-us"
-SITE_ID          = 1
-USE_I18N         = True
-USE_L10N         = True
-USE_TZ           = True
-MEDIA_ROOT       = APP_PATH.child("media")
-MEDIA_URL        = "/media/"
-STATIC_ROOT      = APP_PATH.child("static")
-STATIC_URL       = "/static/"
-ADMINS           = ( ("hugsy", "hugsy@pyc.li"), )
-MANAGERS         = ADMINS
-TEMPLATE_DIRS    = ( APP_PATH.child("templates"), )
-STATICFILES_DIRS = ( APP_PATH.child("assets"), )
-CACHED_SVG_FMT   = "project#%d-fromFunc#%d-fu%d-%s@depth#%d"
+TIME_ZONE = "Europe/Berlin"
+LANGUAGE_CODE = "en-GB"
+SITE_ID = 1
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+MEDIA_ROOT = APP_PATH.child("media")
+MEDIA_URL = "/media/"
+STATIC_ROOT = APP_PATH.child("static")
+STATIC_URL = "/static/"
+ADMINS = (("admin", "devnull@libcrack.so"), )
+MANAGERS = ADMINS
+TEMPLATE_DIRS = (APP_PATH.child("templates"), )
+STATICFILES_DIRS = (APP_PATH.child("assets"), )
+CACHED_SVG_FMT = "project#%d-fromFunc#%d-fu%d-%s@depth#%d"
 
 
-CLANG_PARSE_OPTIONS = [ "-Wextra",
-                        "-O0",
-                        "-Wall",
-                        "-Wunused-function",
-                        "-Wtautological-compare",
-                        "-Wformat-security",
-                        "-I/usr/lib/gcc/x86_64-linux-gnu/4.8.1/include",
-                        "-I/usr/include",
-                        "-I/usr/local/lib/clang/3.4/include"
-                        ]
+CLANG_PARSE_OPTIONS = ["-Wextra",
+                       "-O0",
+                       "-Wall",
+                       "-Wunused-function",
+                       "-Wtautological-compare",
+                       "-Wformat-security",
+                       "-I/usr/lib/gcc/x86_64-unknown-linux-gnu/5.3.0/include",
+                       "-I/usr/include",
+                       "-I/usr/lib/clang/3.7.0/include"
+                       ]
 
 DATABASES = {
     "default": {
-        "ENGINE": 	"django.db.backends.sqlite3",
-        "NAME": 	DB_PATH,
-     }
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": DB_PATH,
+    }
 }
 
 
@@ -89,7 +89,7 @@ LOGGING = {
             "()": "django.utils.log.RequireDebugFalse"
         }
     },
-    
+
     "handlers": {
         "mail_admins": {
             "level": "ERROR",
@@ -97,13 +97,13 @@ LOGGING = {
             "class": "django.utils.log.AdminEmailHandler"
         }
     },
-    
+
     "loggers": {
         "django.request": {
             "handlers": ["mail_admins"],
             "level": "ERROR",
             "propagate": True,
-            },
+        },
 
-        }
+    }
 }
